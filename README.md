@@ -228,6 +228,14 @@ To view database tables:
 ```bash
 npx prisma studio
 ```
+If The User login having 500 server error, Following this 👇
+Windows env var permanently set:
+$env:NODE_TLS_REJECT_UNAUTHORIZED="0"
+
+If it si working ? do this 👇
+setx NODE_TLS_REJECT_UNAUTHORIZED 0
+
+
 
 ---
 
