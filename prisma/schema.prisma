@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+   
+}
+
+model group_members {
+  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  group_id String? @db.Uuid
+  user_id  String? @db.Uuid
+  role     String? @default("member") @db.VarChar(50)
+  groups   groups? @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users    users?  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model groups {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String?         @db.VarChar(100)
+  created_by    String?         @db.Uuid
+  created_at    DateTime?       @default(now()) @db.Timestamp(6)
+  group_members group_members[]
+  users         users?          @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  messages      messages[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model invites {
+  id                               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sender_id                        String?   @db.Uuid
+  receiver_id                      String?   @db.Uuid
+  status                           String?   @default("pending") @db.VarChar(20)
+  created_at                       DateTime? @default(now()) @db.Timestamp(6)
+  users_invites_receiver_idTousers users?    @relation("invites_receiver_idTousers", fields: [receiver_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_invites_sender_idTousers   users?    @relation("invites_sender_idTousers", fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model messages {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  group_id   String?   @db.Uuid
+  sender_id  String?   @db.Uuid
+  content    String?
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  groups     groups?   @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users?    @relation(fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ratings {
+  id                                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reviewer_id                           String?   @db.Uuid
+  reviewed_user_id                      String?   @db.Uuid
+  rating                                Int?
+  feedback                              String?
+  created_at                            DateTime? @default(now()) @db.Timestamp(6)
+  users_ratings_reviewed_user_idTousers users?    @relation("ratings_reviewed_user_idTousers", fields: [reviewed_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_ratings_reviewer_idTousers      users?    @relation("ratings_reviewer_idTousers", fields: [reviewer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model results {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String?    @db.Uuid
+  gpa         Decimal?   @db.Decimal
+  is_verified Boolean?   @default(false)
+  created_at  DateTime?  @default(now()) @db.Timestamp(6)
+  users       users?     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  subjects    subjects[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model subjects {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  result_id    String?  @db.Uuid
+  subject_name String?  @db.VarChar(100)
+  grade        String?  @db.VarChar(5)
+  marks        Int?
+  results      results? @relation(fields: [result_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model users {
+  id                                      String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_id                              String          @unique @db.VarChar(50)
+  name                                    String          @db.VarChar(100)
+  email                                   String          @unique @db.VarChar(100)
+  password                                String
+  specialization                          String?         @db.VarChar(100)
+  year                                    Int?
+  semester                                Int?
+  skills                                  String[]
+  bio                                     String?
+  rating                                  Decimal?        @default(0) @db.Decimal
+  created_at                              DateTime?       @default(now()) @db.Timestamp(6)
+  github_url                              String?
+  linkedin_url                            String?
+  group_members                           group_members[]
+  groups                                  groups[]
+  invites_invites_receiver_idTousers      invites[]       @relation("invites_receiver_idTousers")
+  invites_invites_sender_idTousers        invites[]       @relation("invites_sender_idTousers")
+  messages                                messages[]
+  ratings_ratings_reviewed_user_idTousers ratings[]       @relation("ratings_reviewed_user_idTousers")
+  ratings_ratings_reviewer_idTousers      ratings[]       @relation("ratings_reviewer_idTousers")
+  results                                 results[]
+}
