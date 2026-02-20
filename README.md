@@ -1,3 +1,7 @@
+
+![WhatsApp Image 2026-02-15 at 01 06 13](https://github.com/user-attachments/assets/0e558692-1297-431a-95c2-66b47c49ba6b)
+
+
 # University-Project-Group-Finder
 This is a Next.js Project 
 
