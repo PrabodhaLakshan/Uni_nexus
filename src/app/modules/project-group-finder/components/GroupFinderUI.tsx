@@ -4,6 +4,9 @@ import * as React from "react";
 import GroupSearchForm, { GroupSearchFilters } from "./GroupSearchForm";
 import ProfileCard, { StudentProfile } from "./ProfileCard";
 import SearchResults, { SearchResult } from "./SearchResults";
+import { useRouter } from "next/navigation";
+
+
 
 type Props = {
   user: {
@@ -103,9 +106,10 @@ export default function GroupFinderUI({ user }: Props) {
           />
         </div>
 
+        
         <ProfileCard
           profile={myProfile}
-          onViewFull={() => alert("Go to full profile page")}
+         
         />
       </div>
     </div>

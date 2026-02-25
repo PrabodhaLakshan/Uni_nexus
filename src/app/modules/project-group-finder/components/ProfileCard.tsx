@@ -2,6 +2,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 
 export type StudentProfile = {
   id: string;
@@ -27,11 +28,11 @@ function Badge({ children }: { children: React.ReactNode }) {
 
 export default function ProfileCard({
   profile,
-  onViewFull,
 }: {
   profile: StudentProfile;
-  onViewFull?: () => void;
 }) {
+  const router = useRouter(); // ✅ correct place (inside component)
+
   return (
     <aside
       className="
@@ -43,17 +44,23 @@ export default function ProfileCard({
     >
       <div className="flex items-center gap-3">
         <div className="h-12 w-12 overflow-hidden rounded-xl border border-white/10 bg-white/5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             alt={profile.name}
-            src={profile.imageUrl || "https://api.dicebear.com/7.x/thumbs/svg?seed=student"}
+            src={
+              profile.imageUrl ||
+              "https://api.dicebear.com/7.x/thumbs/svg?seed=student"
+            }
             className="h-full w-full object-cover"
           />
         </div>
 
         <div className="min-w-0">
-          <p className="truncate text-base font-semibold text-white">{profile.name}</p>
-          <p className="truncate text-sm text-white/60">{profile.specialization}</p>
+          <p className="truncate text-base font-semibold text-white">
+            {profile.name}
+          </p>
+          <p className="truncate text-sm text-white/60">
+            {profile.specialization}
+          </p>
         </div>
       </div>
 
@@ -64,6 +71,7 @@ export default function ProfileCard({
             {profile.gpa?.toFixed(2) ?? "—"}
           </p>
         </div>
+
         <div className="rounded-xl border border-white/10 bg-black/20 p-3">
           <p className="text-xs text-white/60">Availability</p>
           <p className="text-sm font-semibold text-white">
@@ -78,7 +86,9 @@ export default function ProfileCard({
           {profile.skills.slice(0, 8).map((s) => (
             <Badge key={s}>{s}</Badge>
           ))}
-          {profile.skills.length > 8 && <Badge>+{profile.skills.length - 8}</Badge>}
+          {profile.skills.length > 8 && (
+            <Badge>+{profile.skills.length - 8}</Badge>
+          )}
         </div>
       </div>
 
@@ -91,7 +101,7 @@ export default function ProfileCard({
 
         <button
           type="button"
-          onClick={onViewFull}
+          onClick={() => router.push("/project-group-finder/profile")}
           className="
             w-full rounded-xl
             bg-blue-600 px-4 py-2.5

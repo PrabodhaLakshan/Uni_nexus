@@ -4,13 +4,10 @@ import { useAuth } from "@/app/providers";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-import Navbar from "@/components/Navbar"; 
-import GroupFinderUI from "@/app/modules/project-group-finder/components/GroupFinderUI";
+import Navbar from "@/components/Navbar";
+import ProfilePage from "@/app/modules/project-group-finder/components/profile/Profilepage";
 
-
-
-
-export default function ProjectGroupFinderPage() {
+export default function ProfilePageRoute() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
@@ -24,9 +21,8 @@ export default function ProjectGroupFinderPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a1020] to-black">
       <Navbar />
-
-      <main className="mx-auto max-w-6xl px-4 py-10">
-        <GroupFinderUI user={user} />
+      <main className="mx-auto max-w-6xl px-4 py-8">
+        <ProfilePage />
       </main>
     </div>
   );
