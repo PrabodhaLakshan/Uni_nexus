@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import SectionCard from "./SectionCard";
 import EmptyAddCard from "./EmptyAddCard";
 import type { Mark, ResultSheetState } from "@/app/modules/project-group-finder/types";
@@ -7,29 +8,106 @@ import type { Mark, ResultSheetState } from "@/app/modules/project-group-finder/
 export default function ResultSheetSection({
   state,
   publishedKeySet,
-  onUploadMock,
   onTogglePublish,
   onPublishSave,
+  setState, // ✅ add this from parent
 }: {
   state: ResultSheetState;
   publishedKeySet: Set<string>;
-  onUploadMock: (fileName: string) => void;
   onTogglePublish: (mark: Mark, enabled: boolean) => void;
   onPublishSave: () => void;
+  setState: React.Dispatch<React.SetStateAction<ResultSheetState>>;
 }) {
-  const hasMarks = state.allMarks.length > 0;
+  const fileRef = React.useRef<HTMLInputElement>(null);
 
+  const hasMarks = state.allMarks.length > 0;
   const keyOf = (m: Mark) => `${m.moduleCode}-${m.marks}-${m.grade}`;
+
+  function openFilePicker() {
+    fileRef.current?.click();
+  }
+
+  async function uploadFile(file: File) {
+    // UI -> pending
+    setState((s) => ({
+      ...s,
+      status: "PENDING",
+      fileName: file.name,
+      allMarks: [],
+      publishedMarks: [],
+    }));
+
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+
+      // If you already have auth userId, you can append it:
+      // fd.append("userId", userId);
+
+      const res = await fetch("/api/project-group-finder/results/upload", {
+        method: "POST",
+        body: fd,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setState((s) => ({
+          ...s,
+          status: "REJECTED",
+          allMarks: [],
+        }));
+        return;
+      }
+
+      // Normalize semester field (if backend returns semesterTag)
+      const marks: Mark[] = (data.extractedMarks ?? []).map((m: any) => ({
+        moduleCode: m.moduleCode,
+        moduleName: m.moduleName,
+        marks: m.marks,
+        grade: m.grade,
+        semester: m.semester ?? m.semesterTag ?? m.semester_name ?? null,
+      }));
+
+      setState((s) => ({
+        ...s,
+        status: data.verified ? "VERIFIED" : "REJECTED",
+        fileName: file.name,
+        allMarks: marks,
+        // publishedMarks will be managed via onTogglePublish callbacks
+      }));
+    } catch (err) {
+      setState((s) => ({
+        ...s,
+        status: "REJECTED",
+        allMarks: [],
+      }));
+    }
+  }
 
   return (
     <SectionCard
       title="Official Mark Sheet"
       hint="Upload your official result sheet. System validates + extracts marks. Then you choose what to publish."
     >
+      {/* hidden file input */}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="application/pdf"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) uploadFile(f);
+          // allow uploading the same file again
+          e.currentTarget.value = "";
+        }}
+      />
+
       {state.status === "EMPTY" ? (
         <EmptyAddCard
-          text="Upload your official mark sheet (PDF/image)."
-          onAdd={() => onUploadMock("resultsheet.pdf")}
+          text="Upload your official mark sheet (PDF)."
+          onAdd={openFilePicker}
         />
       ) : (
         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
@@ -38,6 +116,7 @@ export default function ResultSheetSection({
               <p className="text-sm font-semibold text-white">
                 {state.fileName || "Uploaded file"}
               </p>
+
               <p className="mt-1 text-xs text-white/60">
                 Status:{" "}
                 <span
@@ -53,11 +132,17 @@ export default function ResultSheetSection({
                   {state.status}
                 </span>
               </p>
+
+              {state.status === "PENDING" && (
+                <p className="mt-1 text-xs text-white/50">
+                  Verifying and extracting marks...
+                </p>
+              )}
             </div>
 
             <button
               type="button"
-              onClick={() => onUploadMock("resultsheet.pdf")}
+              onClick={openFilePicker}
               className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white/80 hover:bg-white/10"
             >
               Re-upload
@@ -65,9 +150,7 @@ export default function ResultSheetSection({
           </div>
 
           {!hasMarks ? (
-            <p className="mt-4 text-sm text-white/60">
-              No marks extracted yet.
-            </p>
+            <p className="mt-4 text-sm text-white/60">No marks extracted yet.</p>
           ) : (
             <>
               <p className="mt-4 text-sm font-semibold text-white">
@@ -85,6 +168,7 @@ export default function ResultSheetSection({
                       <th className="px-4 py-3">Semester</th>
                     </tr>
                   </thead>
+
                   <tbody className="divide-y divide-white/10">
                     {state.allMarks.map((m) => {
                       const checked = publishedKeySet.has(keyOf(m));
@@ -98,10 +182,12 @@ export default function ResultSheetSection({
                               className="h-4 w-4 accent-blue-500"
                             />
                           </td>
+
                           <td className="px-4 py-3">
                             <div className="font-medium text-white">{m.moduleCode}</div>
                             <div className="text-xs text-white/60">{m.moduleName}</div>
                           </td>
+
                           <td className="px-4 py-3">{m.marks}</td>
                           <td className="px-4 py-3">{m.grade}</td>
                           <td className="px-4 py-3">{m.semester || "—"}</td>
@@ -132,7 +218,7 @@ export default function ResultSheetSection({
               </div>
 
               <p className="mt-3 text-xs text-white/50">
-                Note: In backend, you must store **only published marks** in DB (not all marks).
+                Note: Backend stores <b>only published marks</b> in DB (not all marks).
               </p>
             </>
           )}
