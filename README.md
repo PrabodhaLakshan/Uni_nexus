@@ -53,12 +53,7 @@ profile/page.tsx
 
 
 
-හරි ✅ ඔයාට GitHub README එකට “full complete” එකක් දෙනවා — dependencies, install order, env setup, prisma steps, run, common errors (TLS), plus API endpoints.
-(ඔයා npm use කරනවා කියලා assume කරලා දානවා.)
 
-> ⚠️ Security note: `.env` එක GitHub එකට commit කරන්න එපා.
-
----
 
 ## ✅ FULL `README.md` (copy–paste)
 
