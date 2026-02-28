@@ -12,4 +12,5 @@ export default function StartupConnectLayout({ children }: { children: React.Rea
       <Footer />
     </div>
   );
+  
 }
