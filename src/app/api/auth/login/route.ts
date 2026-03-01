@@ -37,8 +37,9 @@ export async function POST(req: Request) {
       token,
       user: { id: user.id, student_id: user.student_id, email: user.email, name: user.name },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("LOGIN_ERROR:", err);
-    return NextResponse.json({ message: "Server error" }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Server error";
+    return NextResponse.json({ message }, { status: 500 });
   }
 }

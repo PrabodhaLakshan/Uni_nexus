@@ -1,20 +1,24 @@
 import { prisma } from "@/lib/prismaClient";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
+import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
 
 export async function POST(req: Request) {
   try {
-    const { student_id, name, email, password } = await req.json();
+    const body = await req.json();
+    const student_id = (body?.student_id ?? "").toString().trim();
+    const name = (body?.name ?? "").toString().trim();
+    const email = (body?.email ?? "").toString().trim().toLowerCase();
+    const password = (body?.password ?? "").toString();
 
     if (!student_id || !name || !email || !password) {
-      return Response.json(
+      return NextResponse.json(
         { message: "student_id, name, email, password required" },
         { status: 400 }
       );
     }
-console.log("DB URL HOST CHECK:", process.env.DATABASE_URL?.split("@")[1]?.split("/")[0]);
 
     // Check existing student_id or email
     const existing = await prisma.users.findFirst({
@@ -25,7 +29,7 @@ console.log("DB URL HOST CHECK:", process.env.DATABASE_URL?.split("@")[1]?.split
     });
 
     if (existing) {
-      return Response.json(
+      return NextResponse.json(
         { message: "Student ID or Email already exists" },
         { status: 409 }
       );
@@ -44,11 +48,12 @@ console.log("DB URL HOST CHECK:", process.env.DATABASE_URL?.split("@")[1]?.split
       select: { id: true, student_id: true, name: true, email: true, created_at: true },
     });
 
-    return Response.json({ user }, { status: 201 });
-  } catch (e: any) {
+    return NextResponse.json({ user }, { status: 201 });
+  } catch (e: unknown) {
     console.error("REGISTER_ERROR:", e);
-    return Response.json(
-      { message: "Server error", error: e?.message ?? String(e) },
+    const message = e instanceof Error ? e.message : String(e);
+    return NextResponse.json(
+      { message: "Server error", error: message },
       { status: 500 }
     );
   }
