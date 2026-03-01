@@ -1,80 +1,65 @@
 "use client";
 import React from 'react';
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { X, Send, Link as LinkIcon, User, Sparkles } from "lucide-react";
+import { X, Send, Paperclip, CheckCircle2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-interface ApplyGigModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  gigTitle: string;
-}
+export const ApplyGigModal = ({ gigTitle, onClose }: { gigTitle: string, onClose: () => void }) => {
+  const [submitted, setSubmitted] = React.useState(false);
 
-export const ApplyGigModal = ({ isOpen, onClose, gigTitle }: ApplyGigModalProps) => {
-  if (!isOpen) return null;
-
-  const handleApply = (e: React.FormEvent) => {
-    e.preventDefault();
-    alert("Application Sent Successfully! 🚀");
-    onClose();
+  const handleSubmit = () => {
+    // මෙතනදී තමයි පස්සේ කාලෙක Backend එකට data යවන්නේ
+    setSubmitted(true);
+    setTimeout(() => onClose(), 2000); // තත්පර 2කින් modal එක වහන්න
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
-      <Card className="max-w-xl w-full bg-white rounded-[40px] shadow-2xl border-none p-10 relative overflow-hidden">
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-100 flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-md rounded-[40px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
         
-        {/* Top Accent Gradient */}
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 to-orange-500" />
-
-        {/* Close Button */}
-        <button onClick={onClose} className="absolute top-8 right-8 text-slate-300 hover:text-orange-600 transition-colors z-10">
-          <X size={24} strokeWidth={3} />
-        </button>
-
-        <div className="mb-10 space-y-2 relative">
-          <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-600 mb-2">
-            <Sparkles size={24} fill="currentColor" />
-          </div>
-          <h2 className="text-3xl font-black italic uppercase tracking-tighter text-slate-950 leading-none">
-            Apply <span className="text-blue-700">Now</span>
-          </h2>
-          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">Applying for: {gigTitle}</p>
-        </div>
-
-        <form onSubmit={handleApply} className="space-y-6 relative">
-          {/* Student Name */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-blue-700 ml-1">Full Name</label>
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-              <Input required placeholder="Pasindu Perera" className="rounded-2xl border-slate-100 bg-slate-50/50 py-7 pl-12 font-bold text-slate-700 focus:ring-2 focus:ring-blue-500" />
+        {submitted ? (
+          <div className="p-12 text-center space-y-4">
+            <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 size={40} />
             </div>
+            <h3 className="text-2xl font-black uppercase italic text-slate-900 leading-none">Application Sent!</h3>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+              Your profile has been shared with the startup team. Good luck!
+            </p>
           </div>
-
-          {/* Portfolio Link */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-orange-600 ml-1">Portfolio / GitHub Link</label>
-            <div className="relative">
-              <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-              <Input required placeholder="https://github.com/yourprofile" className="rounded-2xl border-slate-100 bg-slate-50/50 py-7 pl-12 font-bold text-slate-700" />
+        ) : (
+          <>
+            <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+              <div>
+                <h3 className="text-xl font-black italic uppercase text-slate-900 leading-none tracking-tighter">Apply for <span className="text-sky-600">Gig</span></h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest">{gigTitle}</p>
+              </div>
+              <button onClick={onClose} className="p-2 hover:bg-white rounded-xl transition-colors text-slate-400"><X size={20} /></button>
             </div>
-          </div>
 
-          {/* Pitch */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-blue-700 ml-1">Why are you the best fit? (Short Pitch)</label>
-            <Textarea required placeholder="Tell the founder why they should hire you..." className="rounded-2xl border-slate-100 bg-slate-50/50 font-bold min-h-[120px] pt-5 text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none" />
-          </div>
+            <div className="p-8 space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Why are you a good fit?</label>
+                <textarea 
+                  placeholder="Briefly explain your skills related to this project..."
+                  className="w-full h-32 bg-slate-50 border-none rounded-[24px] p-5 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-sky-500 outline-none resize-none placeholder:text-slate-300"
+                />
+              </div>
 
-          <div className="pt-4">
-             <Button type="submit" className="w-full bg-blue-700 hover:bg-orange-600 text-white py-8 rounded-2xl font-black text-lg shadow-xl shadow-blue-100 uppercase italic transition-all active:scale-95 flex items-center justify-center gap-3">
-               SEND APPLICATION <Send size={20} strokeWidth={3} />
-             </Button>
-          </div>
-        </form>
-      </Card>
+              <div className="p-4 border-2 border-dashed border-slate-100 rounded-[24px] flex items-center justify-center gap-3 cursor-pointer hover:bg-slate-50 transition-all">
+                <Paperclip size={16} className="text-slate-400" />
+                <span className="text-[10px] font-black text-slate-400 uppercase">Attach Portfolio / CV (Optional)</span>
+              </div>
+            </div>
+
+            <div className="p-8 pt-0 flex gap-3">
+              <Button variant="ghost" onClick={onClose} className="flex-1 rounded-2xl py-6 font-black text-[10px] uppercase text-slate-400 tracking-widest">Cancel</Button>
+              <Button onClick={handleSubmit} className="flex-2 bg-sky-600 hover:bg-slate-900 text-white rounded-2xl py-6 font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-sky-100">
+                <Send className="w-3 h-3 mr-2" /> Send Application
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };

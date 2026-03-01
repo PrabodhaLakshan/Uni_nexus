@@ -63,7 +63,7 @@ export const AboutSection = () => {
                   value={tempText}
                   onChange={(e) => setTempText(e.target.value)}
                   placeholder="Tell us about yourself..."
-                  className="rounded-3xl border-slate-100 min-h-[180px] focus:ring-indigo-500 font-bold p-6 text-slate-600 leading-relaxed"
+                  className="rounded-3xl border-slate-100 min-h-45 focus:ring-indigo-500 font-bold p-6 text-slate-600 leading-relaxed"
                 />
               </div>
 

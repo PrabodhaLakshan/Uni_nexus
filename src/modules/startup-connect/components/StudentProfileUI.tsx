@@ -23,7 +23,7 @@ export const StudentProfileUI = () => {
 
   return (
     <div className="min-h-screen bg-white pb-20">
-      <div className="bg-gradient-to-r from-blue-700 to-blue-600 py-16 px-6 text-center text-white">
+      <div className="bg-linear-to-r from-blue-700 to-blue-600 py-16 px-6 text-center text-white">
         <h1 className="text-4xl font-black mb-2 tracking-tight">Create Your Student Profile</h1>
         <p className="text-blue-100 font-light">Introduce your skills and profile to the startup world.</p>
       </div>
@@ -117,7 +117,7 @@ export const StudentProfileUI = () => {
 
               {/* Submit Button */}
               <div className="pt-4">
-                <Button type="submit" className="w-full bg-blue-700 hover:bg-blue-800 text-white text-lg py-8 rounded-[20px] shadow-xl shadow-blue-200 transition-all font-bold active:scale-[0.98]">
+                <Button type="submit" className="w-full bg-blue-700 hover:bg-blue-800 text-white text-lg py-8 rounded-4xl shadow-xl shadow-blue-200 transition-all font-bold active:scale-[0.98]">
                   Create My Professional Profile
                 </Button>
               </div>

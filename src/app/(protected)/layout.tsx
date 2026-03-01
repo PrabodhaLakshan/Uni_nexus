@@ -6,7 +6,7 @@ export default function StartupConnectLayout({ children }: { children: React.Rea
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <Navbar />
-      <main className="flex-grow pt-20"> {/* Navbar ekata ida thiyanna */}
+      <main className="grow pt-20"> {/* Navbar ekata ida thiyanna */}
         {children}
       </main>
       <Footer />

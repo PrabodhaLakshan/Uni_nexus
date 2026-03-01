@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Rocket, Bell, LogOut } from "lucide-react";
-import { STARTUP_LANDING_LINKS, STUDENT_LINKS, STARTUP_LINKS } from '../constants/navigation';
+import { STARTUP_DASHBOARD_LINKS, STARTUP_LANDING_LINKS, STUDENT_LINKS, STARTUP_LINKS } from '../constants/navigation';
 
 export const Navbar = () => {
   const pathname = usePathname();
@@ -32,10 +32,17 @@ export const Navbar = () => {
 
   const isStudentRoute = studentRoutePrefixes.some((prefix) => pathname.startsWith(prefix));
   const isStartupRoute = !isStudentRoute;
+  const isStartupDashboardRoute =
+    pathname.startsWith('/startup-connect/talent-pool') ||
+    pathname.startsWith('/startup-connect/dashboard') ||
+    pathname.startsWith('/startup-connect/applicants') ||
+    pathname.startsWith('/dashboard/startup');
   const startupLandingNavbarRoutes = ['/startup-connect', '/startup-connect/browse-gigs', '/startup-connect/about'];
   const isStartupLandingPage = startupLandingNavbarRoutes.includes(pathname);
   const activeLinks = isStartupLandingPage
     ? STARTUP_LANDING_LINKS
+    : isStartupDashboardRoute
+      ? STARTUP_DASHBOARD_LINKS
     : isStartupRoute
       ? STARTUP_LINKS
       : STUDENT_LINKS;
@@ -87,7 +94,7 @@ export const Navbar = () => {
             <Bell className="w-5 h-5" />
           </Button>
           
-          <div className="h-8 w-[1px] bg-slate-200 mx-2" />
+          <div className="h-8 w-px bg-slate-200 mx-2" />
           
           <Button 
             variant="ghost" 
@@ -101,7 +108,7 @@ export const Navbar = () => {
       </div>
 
       {/* Gradient Bottom Line */}
-      <div className="h-[3px] w-full bg-gradient-to-r from-sky-400 via-blue-300 to-sky-500" />
+      <div className="h-0.75 w-full bg-linear-to-r from-sky-400 via-blue-300 to-sky-500" />
     </nav>
   );
 };

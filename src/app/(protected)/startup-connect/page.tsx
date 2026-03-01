@@ -17,7 +17,7 @@ export default function StartupConnectPage() {
     about: ''
   });
 
-  // 1. Landing Page එකේ බටන් එක එබුවම Register Form එකට යවන function එක
+  
   const goToRegister = () => setCurrentView('register');
 
   // 2. Register Form එක Submit කරාම Dashboard එකට යවන function එක

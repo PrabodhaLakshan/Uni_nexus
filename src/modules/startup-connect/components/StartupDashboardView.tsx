@@ -1,8 +1,9 @@
 "use client";
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, Zap, Briefcase, Bell, ArrowUpRight } from "lucide-react";
+import { Plus, Users, Zap, Briefcase, Bell, ArrowUpRight, User, Star } from "lucide-react";
 import { PostGigModal } from './PostGigModal';
 
 export const StartupDashboardView = ({ data }: { data: any }) => {
@@ -21,6 +22,20 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
       <nav className="fixed top-0 left-0 w-full bg-white border-b border-gray-50 px-10 py-5 flex justify-between items-center z-50">
         <div className="text-2xl font-black italic tracking-tighter text-gray-950">
             UNI<span className="text-blue-700">NEXUS</span>
+        </div>
+        <div className="hidden md:flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-gray-400 bg-blue-50/40 p-1.5 rounded-2xl border border-blue-100/50">
+          <Link href="/startup-connect" className="px-4 py-2 rounded-xl hover:bg-white hover:text-blue-700 transition-colors flex items-center gap-2">
+            <User size={14} /> Account
+          </Link>
+          <Link href="/startup-connect/talent-pool" className="px-4 py-2 rounded-xl hover:bg-white hover:text-blue-700 transition-colors flex items-center gap-2">
+            <Users size={14} /> Talent Pool
+          </Link>
+          <Link href="/startup-connect/applicants" className="px-4 py-2 rounded-xl hover:bg-white hover:text-blue-700 transition-colors flex items-center gap-2">
+            <Briefcase size={14} /> Applications
+          </Link>
+          <Link href="/dashboard/startup" className="px-4 py-2 rounded-xl hover:bg-white hover:text-blue-700 transition-colors flex items-center gap-2">
+            <Star size={14} /> Reviews
+          </Link>
         </div>
         <div className="flex gap-4 items-center">
             <Bell className="text-gray-300 hover:text-orange-500 cursor-pointer transition-colors" size={20} />
@@ -55,6 +70,11 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
             <StatSmall label="Live Gigs" value="0" color="blue" icon={<Briefcase size={18}/>} />
             <StatSmall label="Applications" value="12" color="orange" icon={<Users size={18}/>} />
             <StatSmall label="Total Reach" value="250+" color="blue" icon={<Zap size={18}/>} />
+        </div>
+
+        <div className="mt-16 mb-8 flex justify-between items-end">
+          <h2 className="text-2xl font-black italic uppercase tracking-tighter">Recommended <span className="text-blue-600">Applicants</span></h2>
+          <Link href="/startup-connect/talent-pool" className="text-xs font-bold text-slate-400 hover:text-blue-600">View All Talent →</Link>
         </div>
 
         {/* About Startup Card */}

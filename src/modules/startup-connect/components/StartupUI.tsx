@@ -29,7 +29,7 @@ export const StartupUI = ({ onPostGigClick }: { onPostGigClick: () => void }) =>
           
           {/* Student Card */}
           <Card className="group relative overflow-hidden border border-gray-100 shadow-xl shadow-gray-50/50 hover:border-blue-200 hover:shadow-blue-50 transition-all duration-300 rounded-3xl">
-            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-500 to-blue-700" />
+            <div className="absolute top-0 left-0 right-0 h-2 bg-linear-to-r from-blue-500 to-blue-700" />
             
             <CardHeader className="text-center pt-12">
               <div className="w-20 h-20 bg-blue-100/70 rounded-3xl flex items-center justify-center mx-auto mb-5 group-hover:scale-110 group-hover:bg-blue-100 transition-all duration-300">
@@ -49,7 +49,7 @@ export const StartupUI = ({ onPostGigClick }: { onPostGigClick: () => void }) =>
 
           {/* Founder Card - මෙතන තමයි ඔයා ඉල්ලපු වෙනස තියෙන්නේ */}
           <Card className="group relative overflow-hidden border border-gray-100 shadow-xl shadow-gray-50/50 hover:border-orange-200 hover:shadow-orange-50 transition-all duration-300 rounded-3xl">
-            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-orange-500 to-orange-700" />
+            <div className="absolute top-0 left-0 right-0 h-2 bg-linear-to-r from-orange-500 to-orange-700" />
             <CardHeader className="text-center pt-12">
               <div className="w-20 h-20 bg-orange-100/70 rounded-3xl flex items-center justify-center mx-auto mb-5 group-hover:scale-110 group-hover:bg-orange-100 transition-all duration-300">
                 <Building2 className="w-10 h-10 text-orange-700" />
@@ -70,7 +70,7 @@ export const StartupUI = ({ onPostGigClick }: { onPostGigClick: () => void }) =>
 
           {/* Browse Card */}
           <Card className="group relative overflow-hidden border border-gray-100 shadow-xl shadow-gray-50/50 hover:border-gray-200 hover:shadow-gray-100 transition-all duration-300 rounded-3xl">
-            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-600 to-orange-500" />
+            <div className="absolute top-0 left-0 right-0 h-2 bg-linear-to-r from-blue-600 to-orange-500" />
             <CardHeader className="text-center pt-12">
               <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300">
                 <Briefcase className="w-10 h-10 text-gray-700" />

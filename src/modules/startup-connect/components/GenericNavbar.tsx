@@ -70,7 +70,7 @@ export const GenericNavbar = ({ links, portalName, showExit = true }: GenericNav
           
           {showExit && (
             <>
-              <div className="h-6 w-[1px] bg-slate-200" />
+              <div className="h-6 w-px bg-slate-200" />
               <Button 
                 variant="ghost" 
                 onClick={() => router.push('/startup-connect')}

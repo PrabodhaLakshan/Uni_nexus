@@ -40,7 +40,7 @@ export const StartupRegisterForm = ({ onComplete }: { onComplete: (data: any) =>
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase text-blue-700 ml-1">Short Pitch</label>
             <Textarea 
-              className="rounded-2xl border-gray-100 bg-gray-50/50 font-bold min-h-[100px]" 
+              className="rounded-2xl border-gray-100 bg-gray-50/50 font-bold min-h-25"
               placeholder="Tell us about your mission..."
               onChange={(e) => setFormData({...formData, about: e.target.value})}
             />
