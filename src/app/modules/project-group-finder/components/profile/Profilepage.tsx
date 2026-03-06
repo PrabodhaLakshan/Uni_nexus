@@ -11,6 +11,7 @@ import LinksSection from "./LinksSection";
 import ProjectsSection from "./ProjectsSection";
 import ResultSheetSection from "./ResultSheetSection";
 import GroupStatusSection from "./GroupStatusSection";
+import SkillsSection from "./SkillsSection";
 import type { ProfileProject, GroupStatus } from "@/app/modules/project-group-finder/types";
 
 function StatBox({
@@ -56,6 +57,7 @@ export default function ProfilePage() {
     githubUrl: "",
     linkedinUrl: "",
     groupStatus: "NO_GROUP" as GroupStatus,
+    skills: [],
     projects: [],
     resultSheet: {
       status: "EMPTY",
@@ -132,6 +134,8 @@ export default function ProfilePage() {
           githubUrl: profileData?.github_url ?? "",
           linkedinUrl: profileData?.linkedin_url ?? "",
           groupStatus: (profileData?.group_status as GroupStatus) ?? "NO_GROUP",
+          skills: profileData?.skills ?? [],
+          imageUrl: profileData?.avatar_url ?? "",
           projects: dbProjects,
           resultSheet: {
             ...p.resultSheet,
@@ -158,6 +162,7 @@ export default function ProfilePage() {
       github_url?: string | null;
       linkedin_url?: string | null;
       group_status?: string | null;
+      skills?: string[];
     }) => {
       if (!profile.id) return;
       setSaving(true);
@@ -199,6 +204,11 @@ export default function ProfilePage() {
   async function saveGroupStatus(status: GroupStatus) {
     setProfile((p) => ({ ...p, groupStatus: status }));
     await saveToDb({ group_status: status });
+  }
+
+  async function saveSkills(skills: string[]) {
+    setProfile((p) => ({ ...p, skills }));
+    await saveToDb({ skills });
   }
 
   // ── Add project — POST to API then update state ───────────────────────────
@@ -359,7 +369,12 @@ export default function ProfilePage() {
       </div>
 
       {/* Header card */}
-      <ProfileHeaderCard profile={profile} />
+      <ProfileHeaderCard
+        profile={profile}
+        showMore={isEditing}
+        onToggle={() => setIsEditing((v) => !v)}
+        onImageChange={(newUrl) => setProfile((p) => ({ ...p, imageUrl: newUrl }))}
+      />
 
       {/* Main layout — always visible */}
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -416,6 +431,12 @@ export default function ProfilePage() {
             status={profile.groupStatus}
             isEditing={isEditing}
             onSave={saveGroupStatus}
+          />
+
+          <SkillsSection
+            skills={profile.skills}
+            isEditing={isEditing}
+            onSave={saveSkills}
           />
 
           <LinksSection

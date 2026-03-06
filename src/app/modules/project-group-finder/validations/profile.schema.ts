@@ -5,4 +5,6 @@ export const upsertProfileSchema = z.object({
     github_url: z.string().url().optional().nullable().or(z.literal("")),
     linkedin_url: z.string().url().optional().nullable().or(z.literal("")),
     mobile_no: z.string().min(7).max(20).optional().nullable(),
+    group_status: z.enum(["NO_GROUP", "PENDING", "IN_GROUP"]).optional().nullable(),
+    skills: z.array(z.string().max(50)).max(50).optional(),
 });

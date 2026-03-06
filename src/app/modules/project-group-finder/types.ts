@@ -38,6 +38,7 @@ export type StudentProfile = {
   githubUrl?: string;
   groupStatus: GroupStatus;
   linkedinUrl?: string;
+  skills: string[];
 
   projects: ProfileProject[];
   resultSheet: ResultSheetState;

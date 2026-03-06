@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prismaClient";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export async function getProfileByUserId(userId: string) {
     const user = await (prisma.users as any).findUnique({
@@ -21,11 +22,25 @@ export async function getProfileByUserId(userId: string) {
 
             group_status: true,
 
+            avatar_path: true,
+
             rating: true,
             created_at: true,
         },
     });
-    return user;
+
+    if (!user) return null;
+
+    // Build the full public URL server-side so the client never needs NEXT_PUBLIC_SUPABASE_URL
+    let avatar_url: string | null = null;
+    if (user.avatar_path) {
+        const { data } = supabaseAdmin.storage
+            .from("avatars")
+            .getPublicUrl(user.avatar_path);
+        avatar_url = data.publicUrl;
+    }
+
+    return { ...user, avatar_url };
 }
 
 /** Shape accepted by the PUT route (mirrors upsertProfileSchema) */
