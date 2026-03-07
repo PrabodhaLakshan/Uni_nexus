@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prismaClient";
-import { verifyToken } from "@/lib/auth";
+import { verifyToken } from "@/lib/auth-server";
 
 export const runtime = "nodejs";
 

@@ -197,9 +197,17 @@ export default function StudentProfilePage() {
                                         </div>
                                     )}
 
-                                    {/* Links */}
-                                    {(student.github_url || student.linkedin_url) && (
+                                    {/* Contact & Links */}
+                                    {(student.github_url || student.linkedin_url || student.mobile_no) && (
                                         <div className="mt-5 flex flex-wrap gap-3">
+                                            {student.mobile_no && (
+                                                <a
+                                                    href={`tel:${student.mobile_no}`}
+                                                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+                                                >
+                                                    📱 {student.mobile_no}
+                                                </a>
+                                            )}
                                             {student.github_url && (
                                                 <a
                                                     href={student.github_url}
@@ -220,6 +228,50 @@ export default function StudentProfilePage() {
                                                     💼 LinkedIn →
                                                 </a>
                                             )}
+                                        </div>
+                                    )}
+
+                                    {/* Projects */}
+                                    {student.projects && student.projects.length > 0 && (
+                                        <div className="mt-8">
+                                            <p className="mb-4 text-[13px] font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2">Personal Projects</p>
+                                            <div className="space-y-4">
+                                                {student.projects.map((p: any) => (
+                                                    <div key={p.id} className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden pointer-events-auto">
+                                                        {p.imageUrl && (
+                                                            // eslint-disable-next-line @next/next/no-img-element
+                                                            <img src={p.imageUrl} alt={p.title} className="h-36 w-full object-cover" />
+                                                        )}
+                                                        <div className="p-4">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-base">📁</span>
+                                                                <p className="font-semibold text-slate-900 truncate">{p.title}</p>
+                                                            </div>
+                                                            {p.description && (
+                                                                <p className="mt-2 text-sm text-slate-600 leading-relaxed">{p.description}</p>
+                                                            )}
+                                                            {p.tech && p.tech.length > 0 && (
+                                                                <div className="mt-3 flex flex-wrap gap-1.5">
+                                                                    {p.tech.map((t: string) => (
+                                                                        <SkillBadge key={t}>{t}</SkillBadge>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            <div className="mt-3 flex flex-wrap items-center gap-4 text-xs">
+                                                                {p.github_url && (
+                                                                    <a href={p.github_url} target="_blank" rel="noreferrer" className="font-medium text-blue-600 hover:text-blue-700">🐙 Repo →</a>
+                                                                )}
+                                                                {p.live_url && (
+                                                                    <a href={p.live_url} target="_blank" rel="noreferrer" className="font-medium text-indigo-600 hover:text-indigo-700">🔗 Live →</a>
+                                                                )}
+                                                                {p.created_at && (
+                                                                    <span className="ml-auto text-slate-400">Updated {new Date(p.created_at).toLocaleDateString()}</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     )}
                                 </>

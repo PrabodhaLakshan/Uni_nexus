@@ -27,6 +27,7 @@ export async function getProfileByUserId(userId: string) {
 
             rating: true,
             created_at: true,
+            projects: true,
         },
     });
 
@@ -41,7 +42,19 @@ export async function getProfileByUserId(userId: string) {
         avatar_url = data.publicUrl;
     }
 
-    return { ...user, avatar_url };
+    // Attach public URLs for each project image
+    const projectsWithImages = user.projects?.map((p: any) => {
+        let imageUrl: string | undefined = p.image_path || undefined;
+        if (p.image_path && !p.image_path.startsWith("http")) {
+            const { data } = supabaseAdmin.storage
+                .from("project-images")
+                .getPublicUrl(p.image_path);
+            imageUrl = data.publicUrl;
+        }
+        return { ...p, imageUrl };
+    }) || [];
+
+    return { ...user, avatar_url, projects: projectsWithImages };
 }
 
 /** Shape accepted by the PUT route (mirrors upsertProfileSchema) */

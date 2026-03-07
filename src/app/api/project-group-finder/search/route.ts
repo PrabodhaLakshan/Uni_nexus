@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireUserFromRequest } from "@/lib/auth-server";
 
 export async function GET(req: NextRequest) {
     try {
@@ -11,17 +12,28 @@ export async function GET(req: NextRequest) {
         const batch = searchParams.get("batch") || undefined;
         const specialization = searchParams.get("specialization") || undefined;
 
+        const currentUser = await requireUserFromRequest(req);
+
         const students = await prisma.users.findMany({
             where: {
+                id: { not: currentUser.id }, // Rule 1: Cannot invite yourself
                 year: year ? parseInt(year) : undefined,
                 semester: semester ? parseInt(semester) : undefined,
                 specialization: specialization || undefined,
-                group_status: {
-                    in: ["PENDING", "NO_GROUP"],
-                },
             },
             include: {
                 user_skills: true,
+                project_group_members: {
+                    include: {
+                        project_group: true
+                    }
+                },
+                project_group_invites_project_group_invites_receiver_idTousers: {
+                    where: {
+                        sender_id: currentUser.id,
+                        status: "pending"
+                    }
+                }
             },
         });
 
@@ -44,6 +56,10 @@ export async function GET(req: NextRequest) {
                 imageUrl = data.publicUrl;
             }
 
+            const typedStudent = student as any;
+            const isInGroup = typedStudent.project_group_members !== null;
+            const hasPendingInvite = typedStudent.project_group_invites_project_group_invites_receiver_idTousers.length > 0;
+
             return {
                 id: student.id,
                 name: student.name,
@@ -55,7 +71,8 @@ export async function GET(req: NextRequest) {
                 skills,
                 matchedSkills,
                 matchScore: Math.min(matchScore, 100),
-                groupStatus: student.group_status,
+                isInGroup,
+                hasPendingInvite
             };
         });
 

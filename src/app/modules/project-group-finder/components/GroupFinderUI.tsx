@@ -322,7 +322,12 @@ function DashboardPanel({
         specialization: currentFilters.specialization,
       });
 
-      const res = await fetch(`/api/project-group-finder/search?${params.toString()}`);
+      const token = localStorage.getItem("pgf_token");
+      const res = await fetch(`/api/project-group-finder/search?${params.toString()}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       const data = await res.json();
 
       if (!res.ok) {
@@ -342,10 +347,12 @@ function DashboardPanel({
 
   const handleInvite = async (studentId: string) => {
     try {
+      const token = localStorage.getItem("pgf_token");
       const res = await fetch("/api/project-group-finder/invite", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ receiverId: studentId }),
       });

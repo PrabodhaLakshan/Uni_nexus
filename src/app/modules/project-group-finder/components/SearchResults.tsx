@@ -8,6 +8,8 @@ import type { StudentProfile } from "./ProfileCard";
 export type SearchResult = StudentProfile & {
   matchScore: number; // 0-100
   matchedSkills: string[];
+  isInGroup?: boolean;
+  hasPendingInvite?: boolean;
 };
 
 /** Skill badge — highlighted if it's a matched skill */
@@ -121,9 +123,14 @@ function ResultCard({
               <p className="truncate text-base font-bold text-slate-900">{r.name}</p>
               <p className="truncate text-xs text-slate-500">{r.specialization}</p>
               <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                {r.groupStatus && (
+                {r.isInGroup && (
                   <span className="rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700">
-                    {r.groupStatus === "no_group" ? "No Group" : "Pending"}
+                    In a Group
+                  </span>
+                )}
+                {!r.isInGroup && (
+                  <span className="rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-700">
+                    Looking for Group
                   </span>
                 )}
                 {r.gpa !== undefined && (
@@ -197,9 +204,15 @@ function ResultCard({
             <button
               type="button"
               onClick={() => onRequest?.(r.id)}
-              className="rounded-xl bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 active:scale-95"
+              disabled={r.isInGroup || r.hasPendingInvite}
+              className={[
+                "rounded-xl px-4 py-1.5 text-xs font-semibold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-offset-1 active:scale-95",
+                r.isInGroup || r.hasPendingInvite
+                  ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                  : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-400"
+              ].join(" ")}
             >
-              Invite
+              {r.isInGroup ? "Already in Group" : r.hasPendingInvite ? "Invite Sent" : "Invite"}
             </button>
           </div>
         </div>
