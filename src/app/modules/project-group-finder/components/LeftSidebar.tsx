@@ -145,15 +145,8 @@ function SidebarContent({
           desc="Real-time group chat"
           badge="Live"
           onClick={() => {
-            console.log("Chat groupId:", groupId);
-            if (!groupId) {
-              console.error("groupId is missing");
-              return;
-            }
-
             onChange("chat");
             onClose();
-            router.push(`/project-group-finder/groups/${groupId}/chat`);
           }}
         />
       </div>

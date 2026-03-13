@@ -9,6 +9,7 @@ import SearchResults, { SearchResult } from "./SearchResults";
 import LeftSidebar, { NavKey } from "./LeftSidebar";
 import GroupInvites from "./GroupInvites";
 import GroupDashboardPage from "../groups/[id]/page";
+import ChatWindow from "./chat/ChatWindow";
 
 type Props = {
   user: { name: string; email: string; student_id: string };
@@ -63,39 +64,6 @@ function StatCard({
 
 
 
-// ── CHAT PANEL ────────────────────────────────────────────────────────────────
-function ChatPanel() {
-  const [msg, setMsg] = React.useState("");
-
-  return (
-    <div className="space-y-6">
-      <PageHeader title="Group Chat" subtitle="Real-time chat with your project group." />
-
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-4">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
-          <span className="text-sm font-semibold text-slate-900">Live</span>
-        </div>
-
-        <div className="flex h-64 items-center justify-center bg-slate-50 p-4">
-          <p className="text-sm text-slate-400">Chat history will appear here.</p>
-        </div>
-
-        <div className="flex gap-2 border-t border-slate-100 p-4">
-          <input
-            value={msg}
-            onChange={(e) => setMsg(e.target.value)}
-            placeholder="Type a message..."
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
-          />
-          <button className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">
-            Send
-          </button>
-        </div>
-      </section>
-    </div>
-  );
-}
 
 // ── DASHBOARD PANEL ───────────────────────────────────────────────────────────
 function DashboardPanel({
@@ -326,7 +294,16 @@ export default function GroupFinderUI({ user }: Props) {
                 )
               )}
               {panel === "invites" && <GroupInvites />}
-              {panel === "chat" && <ChatPanel />}
+              {panel === "chat" && myGroupId ? (
+                <ChatWindow groupId={myGroupId} />
+              ) : panel === "chat" ? (
+                <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+                  <p className="text-lg font-medium text-slate-900">Group Chat Unavailable</p>
+                  <p className="mt-2 text-sm text-slate-500">
+                    You need to join or create a group to access the chat.
+                  </p>
+                </div>
+              ) : null}
             </motion.div>
           </AnimatePresence>
         </div>

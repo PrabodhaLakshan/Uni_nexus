@@ -2,6 +2,8 @@
 
 import type { GroupMessage } from "@/app/modules/project-group-finder/types/chat";
 
+import { useState } from "react";
+
 export default function MessageBubble({
     message,
     isOwnMessage,
@@ -9,17 +11,35 @@ export default function MessageBubble({
     message: GroupMessage;
     isOwnMessage: boolean;
 }) {
+    const [imageFailed, setImageFailed] = useState(false);
+
     return (
         <div className={`flex ${isOwnMessage ? "justify-end" : "justify-start"}`}>
             <div
                 className={`flex max-w-[75%] items-start gap-2 ${isOwnMessage ? "flex-row-reverse" : "flex-row"
                     }`}
             >
-                <img
-                    src={message.sender_image || "/default-avatar.png"}
-                    alt={message.sender_name || "User"}
-                    className="h-9 w-9 rounded-full object-cover"
-                />
+                {message.sender_image && !imageFailed ? (
+                    <img
+                        src={message.sender_image.startsWith('http') || message.sender_image.startsWith('/')
+                            ? message.sender_image
+                            : `https://orinbntgsotpsarcvrga.supabase.co/storage/v1/object/public/avatars/${message.sender_image}`}
+                        alt={message.sender_name || "User"}
+                        className="flex-shrink-0 h-9 w-9 rounded-full object-cover shadow-sm ring-2 ring-white"
+                        onError={() => setImageFailed(true)}
+                    />
+                ) : (
+                    <div className="flex-shrink-0 flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600 shadow-sm ring-2 ring-white">
+                        {message.sender_name
+                            ? message.sender_name
+                                .split(" ")
+                                .map((w) => w[0])
+                                .join("")
+                                .slice(0, 2)
+                                .toUpperCase()
+                            : "U"}
+                    </div>
+                )}
 
                 <div
                     className={`rounded-2xl px-4 py-2 shadow-sm ${isOwnMessage

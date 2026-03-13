@@ -5,17 +5,17 @@ import { useGroupChat } from "@/app/modules/project-group-finder/hooks/useGroupC
 import MessageInput from "./MessageInput";
 import MessageBubble from "./MessageBubble";
 
+import { useAuth } from "@/app/providers";
+
 export default function ChatWindow({
     groupId,
-    currentUserId,
-    currentUserName,
-    currentUserImage,
 }: {
     groupId: string;
-    currentUserId: string;
-    currentUserName?: string;
-    currentUserImage?: string;
 }) {
+    const { user } = useAuth();
+    const currentUserId = user?.id || "";
+    const currentUserName = user?.name || "User";
+    const currentUserImage = user?.avatar_path || "";
     const { messages, loading, sendMessage } = useGroupChat(groupId, currentUserId);
     const bottomRef = useRef<HTMLDivElement | null>(null);
 

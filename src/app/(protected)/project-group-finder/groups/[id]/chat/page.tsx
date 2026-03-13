@@ -12,18 +12,9 @@ export default async function GroupChatPage({
         notFound();
     }
 
-    const currentUserId = "11111111-1111-1111-1111-111111111111";
-    const currentUserName = "Current User";
-    const currentUserImage = "";
-
     return (
         <main className="p-6">
-            <ChatWindow
-                groupId={id}
-                currentUserId={currentUserId}
-                currentUserName={currentUserName}
-                currentUserImage={currentUserImage}
-            />
+            <ChatWindow groupId={id} />
         </main>
     );
 }
