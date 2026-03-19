@@ -1,11 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "library"
 }
 
 datasource db {
   provider = "postgresql"
-   
 }
 
 model group_members {
@@ -108,4 +107,131 @@ model users {
   ratings_ratings_reviewed_user_idTousers ratings[]       @relation("ratings_reviewed_user_idTousers")
   ratings_ratings_reviewer_idTousers      ratings[]       @relation("ratings_reviewer_idTousers")
   results                                 results[]
+  uniMartProducts                         uniMartProducts[]
+  uniMartMessages                         uniMartMessage[] @relation("sender")
+  uniMartMessagesReceived                 uniMartMessage[] @relation("receiver")
+  buyerConversations                      Conversation[]   @relation("ConversationBuyer")
+  sellerConversations                     Conversation[]   @relation("ConversationSeller")
+  conversationMessages                    Message[]
+  buyerOrders                             uniMartOrder[] @relation("BuyerOrders")
+  uniMartReviews                          uniMartReview[] @relation("uniMartReviews")
+}
+
+model uniMartProducts {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title          String   @db.VarChar(200)
+  description    String
+  price          Decimal  @db.Decimal
+  category       String   @db.VarChar(100)
+  condition      String   @db.VarChar(50)
+  location       String?  @db.VarChar(200)
+  images         String[] @default([])
+  status         String   @default("AVAILABLE")
+  currentOrderId String?  @db.Uuid
+  sellerId       String   @db.Uuid
+  seller         users    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  orders         uniMartOrder[]
+  reviews        uniMartReview[]
+  conversations  Conversation[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Conversation {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId String   @db.Uuid
+  buyerId   String   @db.Uuid
+  sellerId  String   @db.Uuid
+  orderId   String?  @unique @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product   uniMartProducts @relation(fields: [productId], references: [id], onDelete: Cascade)
+  buyer     users           @relation("ConversationBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller    users           @relation("ConversationSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  order     uniMartOrder?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  messages  Message[]
+
+  @@unique([productId, buyerId, sellerId])
+  @@index([buyerId, createdAt(sort: Desc)])
+  @@index([sellerId, createdAt(sort: Desc)])
+  @@index([productId, createdAt(sort: Desc)])
+}
+
+model Message {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversationId String   @db.Uuid
+  senderId       String   @db.Uuid
+  text           String
+  read           Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         users        @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt(sort: Desc)])
+  @@index([senderId, createdAt(sort: Desc)])
+}
+
+model uniMartMessage {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content    String
+  senderId   String   @db.Uuid
+  sender     users    @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String   @db.Uuid
+  receiver   users    @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  productId  String?  @db.Uuid
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model uniMartOrder {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  product         uniMartProducts @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId       String   @db.Uuid
+  buyer           users    @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Cascade)
+  buyerId         String   @db.Uuid
+  paymentMethod   String   @db.VarChar(20)
+  paymentStatus   String   @default("PENDING") @db.VarChar(20)
+  receiptUrl      String?
+  stripeSessionId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  review          uniMartReview?
+  conversation    Conversation?
+}
+
+model uniMartReview {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rating    Int      @db.SmallInt
+  comment   String
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt
+  productId String   @db.Uuid
+  buyerId   String   @db.Uuid
+  orderId   String   @unique @db.Uuid
+
+  product   uniMartProducts @relation(fields: [productId], references: [id], onDelete: Cascade)
+  buyer     users           @relation("uniMartReviews", fields: [buyerId], references: [id], onDelete: Cascade)
+  order     uniMartOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([buyerId])
+  @@map("unimart_reviews")
+}
+
+model app_notifications {
+  id          String   @id @default(uuid())
+  receiver_id String
+  sender_id   String?
+  type        String
+  title       String
+  message     String
+  is_read     Boolean  @default(false)
+  meta        Json?
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([receiver_id, created_at(sort: Desc)], map: "idx_app_notifications_receiver_created")
+  @@index([receiver_id, is_read], map: "idx_app_notifications_receiver_unread")
+  @@map("app_notifications")
 }
