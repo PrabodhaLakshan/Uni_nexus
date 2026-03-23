@@ -1,20 +1,56 @@
 import { prisma } from "@/lib/prismaClient";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
+import { NextResponse } from "next/server";
+import {
+  hasLengthBetween,
+  isValidEmail,
+  isValidId,
+  normalizeEmail,
+  normalizeString,
+} from "@/lib/validation";
 
 export const runtime = "nodejs";
 
 
 export async function POST(req: Request) {
   try {
-    const { student_id, name, email, password } = await req.json();
+    const body = await req.json();
+    const student_id = normalizeString(body?.student_id);
+    const name = normalizeString(body?.name);
+    const email = normalizeEmail(body?.email);
+    const password = (body?.password ?? "").toString();
 
     if (!student_id || !name || !email || !password) {
-      return Response.json(
+      return NextResponse.json(
         { message: "student_id, name, email, password required" },
         { status: 400 }
       );
     }
-console.log("DB URL HOST CHECK:", process.env.DATABASE_URL?.split("@")[1]?.split("/")[0]);
+
+    if (!isValidId(student_id)) {
+      return NextResponse.json(
+        { message: "student_id must be 3-40 chars (letters, numbers, _ or -)" },
+        { status: 400 }
+      );
+    }
+
+    if (!hasLengthBetween(name, 2, 80)) {
+      return NextResponse.json(
+        { message: "name must be between 2 and 80 characters" },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidEmail(email)) {
+      return NextResponse.json({ message: "Invalid email format" }, { status: 400 });
+    }
+
+    if (!hasLengthBetween(password, 8, 72)) {
+      return NextResponse.json(
+        { message: "password must be between 8 and 72 characters" },
+        { status: 400 }
+      );
+    }
 
     // Check existing student_id or email
     const existing = await prisma.users.findFirst({
@@ -25,7 +61,7 @@ console.log("DB URL HOST CHECK:", process.env.DATABASE_URL?.split("@")[1]?.split
     });
 
     if (existing) {
-      return Response.json(
+      return NextResponse.json(
         { message: "Student ID or Email already exists" },
         { status: 409 }
       );
@@ -44,11 +80,12 @@ console.log("DB URL HOST CHECK:", process.env.DATABASE_URL?.split("@")[1]?.split
       select: { id: true, student_id: true, name: true, email: true, created_at: true },
     });
 
-    return Response.json({ user }, { status: 201 });
-  } catch (e: any) {
+    return NextResponse.json({ user }, { status: 201 });
+  } catch (e: unknown) {
     console.error("REGISTER_ERROR:", e);
-    return Response.json(
-      { message: "Server error", error: e?.message ?? String(e) },
+    const message = e instanceof Error ? e.message : String(e);
+    return NextResponse.json(
+      { message: "Server error", error: message },
       { status: 500 }
     );
   }
