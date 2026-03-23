@@ -83,3 +83,6 @@ model users {
   ratings_ratings_reviewed_user_idTousers ratings[]       @relation("ratings_reviewed_user_idTousers")
   ratings_ratings_reviewer_idTousers      ratings[]       @relation("ratings_reviewer_idTousers")
 }
+
+
+

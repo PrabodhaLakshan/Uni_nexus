@@ -53,7 +53,7 @@ export const StartupReviews = () => {
     <div className="mt-16 bg-white rounded-[40px] p-10 border border-slate-100 shadow-xl shadow-slate-50">
       <div className="flex items-center justify-between mb-10">
         <div>
-          <h2 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900">
+          <h2 className="text-3xl font-black  uppercase tracking-tighter text-slate-900">
             Startup <span className="text-orange-500">Reviews</span>
           </h2>
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">What students say about working here</p>
@@ -100,14 +100,7 @@ export const StartupReviews = () => {
         ))}
       </div>
 
-      <button 
-        onClick={() => setIsModalOpen(true)}
-        className="mt-10 w-full py-6 border-2 border-dashed border-slate-200 rounded-[24px] text-slate-400 font-black text-[10px] uppercase hover:bg-slate-50 hover:border-orange-300 hover:text-orange-500 transition-all group"
-      >
-        <span className="flex items-center justify-center gap-2 group-hover:scale-105 transition-transform">
-          + Share your experience with this startup
-        </span>
-      </button>
+      
 
       {isModalOpen && (
         <AddReviewModal
