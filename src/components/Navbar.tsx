@@ -205,6 +205,7 @@ export default function Navbar() {
             </>
           )}
 
+          {/* Logged In */}
           {!loading && user && (
             <>
               {navLinks.map((link) => (

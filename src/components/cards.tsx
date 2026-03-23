@@ -112,6 +112,7 @@ function SpotlightCard({
   onOpen: () => void;
 }) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const router = useRouter();
 
   return (
     <div
@@ -141,7 +142,7 @@ function SpotlightCard({
         group
       "
     >
-      {/* Spotlight Glow */}
+      {/* Glow Effect */}
       <div
         className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-300"
         style={{
