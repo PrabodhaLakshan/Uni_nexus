@@ -5,11 +5,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Users, Zap, Briefcase, ArrowUpRight, Github, ExternalLink } from "lucide-react";
+import { Plus, Users, Zap, Briefcase, ArrowUpRight, Github, ExternalLink, ShieldCheck, Rocket } from "lucide-react";
 import { PostGigModal } from "./PostGigModal";
 import { AddProjectModal } from "./AddProjectModal";
 import { DashboardLayout } from "./DashboardLayout";
 
+// Types remain same as per your request
 type StartupProfile = {
   name: string;
   industry: string;
@@ -66,6 +67,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
   const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
   const [certificateImageFailed, setCertificateImageFailed] = useState(false);
   const [certificateSrcIndex, setCertificateSrcIndex] = useState(0);
+  
   const [startupProfile, setStartupProfile] = useState<StartupProfile>({
     name: data?.name || "Startup",
     industry: data?.industry || "Technology",
@@ -73,23 +75,18 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
     logo: data?.logo ?? null,
     certificates: Array.isArray(data?.certificates) ? data.certificates : [],
   });
-  const [editForm, setEditForm] = useState<StartupProfile>({
-    name: data?.name || "Startup",
-    industry: data?.industry || "Technology",
-    about: data?.about || "",
-    logo: data?.logo ?? null,
-    certificates: Array.isArray(data?.certificates) ? data.certificates : [],
-  });
+
+  const [editForm, setEditForm] = useState<StartupProfile>(startupProfile);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
   const [recentWorks, setRecentWorks] = useState<RecentWorkItem[]>(INITIAL_RECENT_WORKS);
 
   const handleContactTalent = (talentName: string) => {
-    setNotificationMessage(`Send notification to ${talentName}`);
+    setNotificationMessage(`Notification sent to ${talentName} successfully!`);
     setTimeout(() => setNotificationMessage(null), 3000);
   };
 
   useEffect(() => {
-    const nextData: StartupProfile = {
+    const nextData = {
       name: data?.name || "Startup",
       industry: data?.industry || "Technology",
       about: data?.about || "",
@@ -105,10 +102,8 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
       setLogoPreviewUrl(null);
       return;
     }
-
     const url = URL.createObjectURL(startupProfile.logo);
     setLogoPreviewUrl(url);
-
     return () => URL.revokeObjectURL(url);
   }, [startupProfile.logo]);
 
@@ -141,317 +136,317 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
   const displayIndustry = startupProfile.industry || "Technology";
 
   return (
-    <DashboardLayout contentClassName="space-y-8">
+    <DashboardLayout contentClassName="space-y-10 bg-[#f8fafc]/50">
       <PostGigModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-      <div className="max-w-6xl mx-auto space-y-8">
-        <Card className="p-6 md:p-8 border border-slate-100 rounded-3xl bg-white shadow-sm">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-            <div className="flex items-start gap-5">
-              <div className="w-24 h-24 rounded-[28px] overflow-hidden border-4 border-blue-100 bg-white shadow-lg shadow-blue-100/30 flex items-center justify-center text-3xl font-black text-blue-700">
-                {logoPreviewUrl ? (
-                  <img src={logoPreviewUrl} alt="Business logo" className="w-full h-full object-cover" />
-                ) : (
-                  displayName.charAt(0)
-                )}
+      
+      <div className="max-w-7xl mx-auto space-y-10 px-4">
+        
+        {/* --- WELCOME HEADER SECTION --- */}
+        <Card className="relative overflow-hidden p-8 md:p-12 border-none rounded-[40px] bg-white shadow-2xl shadow-blue-100/20">
+          {/* Decorative Background Blobs */}
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-60" />
+          <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-orange-50 rounded-full blur-3xl opacity-60" />
+
+          <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+            <div className="flex items-center gap-6">
+              <div className="relative group">
+                <div className="w-28 h-28 rounded-[32px] overflow-hidden border-[6px] border-white bg-white shadow-2xl shadow-blue-200/50 flex items-center justify-center text-4xl font-black text-blue-700 transition-transform group-hover:scale-105 duration-300">
+                  {logoPreviewUrl ? (
+                    <img src={logoPreviewUrl} alt="Business logo" className="w-full h-full object-cover" />
+                  ) : (
+                    displayName.charAt(0)
+                  )}
+                </div>
+                <div className="absolute -bottom-2 -right-2 bg-green-500 text-white p-2 rounded-xl shadow-lg border-4 border-white">
+                    <ShieldCheck size={18} />
+                </div>
               </div>
 
               <div>
-                <h1 className="text-3xl md:text-5xl font-black   tracking-tighter text-slate-900 leading-tight">
-                  Welcome, <span className="text-blue-700">{displayName}</span>
+                <div className="flex items-center gap-2 mb-1">
+                    <span className="bg-blue-100 text-blue-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Verified Startup</span>
+                </div>
+                <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-slate-900 leading-none">
+                  Hi, <span className="text-blue-700">{displayName}</span>
                 </h1>
-                <p className="text-slate-500 font-bold italic mt-1">{displayIndustry} Innovation Sector</p>
+                <p className="text-slate-400 font-bold text-sm mt-2 flex items-center gap-2">
+                    <Rocket size={16} className="text-orange-500" /> {displayIndustry} Innovation Sector
+                </p>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex items-center gap-4">
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="bg-orange-600 hover:bg-orange-700 text-white px-7 py-3 rounded-xl font-black text-[11px] shadow-lg shadow-orange-100 flex items-center gap-2 transition-all active:scale-95"
+                className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-4 rounded-2xl font-black text-xs shadow-xl shadow-orange-200 flex items-center gap-3 transition-all active:scale-95 group"
               >
-                <Plus size={16} strokeWidth={3} /> NEW GIG
+                <Plus size={18} strokeWidth={3} className="group-hover:rotate-90 transition-transform" /> POST A NEW GIG
               </button>
             </div>
           </div>
         </Card>
 
+        {/* --- EDIT PROFILE (MANAGE) SECTION --- */}
         {isManageOpen && (
-          <Card className="p-6 border border-blue-100 bg-blue-50/40 rounded-3xl shadow-sm">
-            <h3 className="text-sm font-black uppercase text-blue-700 tracking-widest mb-5">Edit Startup Profile</h3>
+          <Card className="p-8 border-2 border-dashed border-blue-200 bg-blue-50/30 rounded-[35px] animate-in slide-in-from-top duration-500">
+            <div className="flex items-center gap-3 mb-8">
+                <div className="w-2 h-8 bg-blue-700 rounded-full" />
+                <h3 className="text-lg font-black uppercase text-slate-800 tracking-tight">Refine Your Identity</h3>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-blue-700 ml-1">Startup Name</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <label className="text-[11px] font-black uppercase text-blue-700 ml-1 tracking-widest">Startup Name</label>
                 <Input
                   value={editForm.name}
-                  className="rounded-xl border-slate-100 bg-white py-5 font-bold"
+                  className="rounded-2xl border-none shadow-sm bg-white h-14 font-bold text-slate-700 focus:ring-2 focus:ring-blue-500"
                   onChange={(event) => setEditForm((prev) => ({ ...prev, name: event.target.value }))}
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-blue-700 ml-1">Industry</label>
+              <div className="space-y-3">
+                <label className="text-[11px] font-black uppercase text-blue-700 ml-1 tracking-widest">Industry Type</label>
                 <Input
                   value={editForm.industry}
-                  className="rounded-xl border-slate-100 bg-white py-5 font-bold"
+                  className="rounded-2xl border-none shadow-sm bg-white h-14 font-bold text-slate-700 focus:ring-2 focus:ring-blue-500"
                   onChange={(event) => setEditForm((prev) => ({ ...prev, industry: event.target.value }))}
                 />
               </div>
             </div>
 
-            <div className="space-y-2 mt-5">
-              <label className="text-[10px] font-black uppercase text-blue-700 ml-1">Short Pitch</label>
+            <div className="space-y-3 mt-8">
+              <label className="text-[11px] font-black uppercase text-blue-700 ml-1 tracking-widest">Mission & Vision</label>
               <Textarea
                 value={editForm.about}
-                className="rounded-xl border-slate-100 bg-white font-bold min-h-24"
+                placeholder="Describe your startup's core mission..."
+                className="rounded-2xl border-none shadow-sm bg-white font-bold min-h-32 p-5 text-slate-700 focus:ring-2 focus:ring-blue-500"
                 onChange={(event) => setEditForm((prev) => ({ ...prev, about: event.target.value }))}
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-blue-700 ml-1">Business Logo</label>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  className="rounded-xl border-slate-100 bg-white py-2.5 font-bold"
-                  onChange={handleEditLogoChange}
-                />
-                {editForm.logo && <p className="text-[10px] font-bold text-slate-500">Selected: {editForm.logo.name}</p>}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+              <div className="space-y-3">
+                <label className="text-[11px] font-black uppercase text-blue-700 ml-1 tracking-widest">Update Logo</label>
+                <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-100">
+                    <Input type="file" accept="image/*" className="border-none bg-transparent font-bold cursor-pointer" onChange={handleEditLogoChange} />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-blue-700 ml-1">Certificates</label>
-                <Input
-                  type="file"
-                  multiple
-                  accept=".pdf,.jpg,.jpeg,.png,.webp"
-                  className="rounded-xl border-slate-100 bg-white py-2.5 font-bold"
-                  onChange={handleEditCertificatesChange}
-                />
-                {editForm.certificates.length > 0 && <p className="text-[10px] font-bold text-slate-500">{editForm.certificates.length} file(s) selected</p>}
+              <div className="space-y-3">
+                <label className="text-[11px] font-black uppercase text-blue-700 ml-1 tracking-widest">Registration Docs</label>
+                <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-100">
+                    <Input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" className="border-none bg-transparent font-bold cursor-pointer" onChange={handleEditCertificatesChange} />
+                </div>
               </div>
             </div>
 
-            <div className="flex gap-3 justify-end mt-6">
-              <Button type="button" variant="ghost" onClick={handleCancelManage} className="rounded-xl font-black text-[10px] uppercase">
-                Cancel
+            <div className="flex gap-4 justify-end mt-10">
+              <Button variant="ghost" onClick={handleCancelManage} className="rounded-2xl font-black text-xs uppercase px-8 py-6 hover:bg-red-50 hover:text-red-500 transition-colors">
+                Discard
               </Button>
-              <Button type="button" onClick={handleSaveProfile} className="bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-black text-[10px] uppercase">
-                Save Changes
+              <Button onClick={handleSaveProfile} className="bg-blue-700 hover:bg-blue-800 text-white rounded-2xl font-black text-xs uppercase px-8 py-6 shadow-xl shadow-blue-200">
+                Update Profile
               </Button>
             </div>
           </Card>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <StatCard label="Live Gigs" value="04" tone="blue" icon={<Briefcase size={18} />} />
-          <StatCard label="Applications" value="28" tone="orange" icon={<Users size={18} />} />
-          <StatCard label="Total Reach" value="1.2k" tone="blue" icon={<Zap size={18} />} />
+        {/* --- STATS OVERVIEW --- */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <StatCard label="Active Gigs" value="04" tone="blue" icon={<Briefcase size={22} />} />
+          <StatCard label="New Applicants" value="28" tone="orange" icon={<Users size={22} />} />
+          <StatCard label="Talent Reach" value="1.2k" tone="green" icon={<Zap size={22} />} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <Card className="p-6 border border-slate-100 rounded-3xl bg-white shadow-sm lg:col-span-7">
-            <h3 className="text-[10px] font-black uppercase text-blue-700 tracking-[0.2em] mb-3 underline decoration-2">Company Vision</h3>
-            <p className="text-lg md:text-xl font-bold text-slate-600 italic leading-relaxed">
-              "{startupProfile.about || "Your startup mission will appear here once you post your first gig."}"
+        {/* --- VISION & ASSETS GRID --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <Card className="p-10 border-none rounded-[35px] bg-white shadow-xl shadow-slate-200/50 lg:col-span-7 flex flex-col justify-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-700" />
+            <h3 className="text-[11px] font-black uppercase text-blue-700 tracking-[0.3em] mb-6 flex items-center gap-2">
+                <span className="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-blue-700" /></span>
+                Company Vision
+            </h3>
+            <p className="text-xl md:text-2xl font-bold text-slate-700 italic leading-relaxed">
+              "{startupProfile.about || "Empowering the next generation of campus innovators through meaningful opportunities."}"
             </p>
           </Card>
 
-          <Card className="p-6 border border-slate-100 rounded-3xl bg-white shadow-sm lg:col-span-5">
-            <h3 className="text-[10px] font-black uppercase text-blue-700 tracking-[0.2em] mb-4 underline decoration-2">Registration Assets</h3>
-
-            <div className="space-y-4">
-              
-              <div>
-                <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-2">Certificates</p>
-                <div className="mb-3 rounded-2xl border border-slate-100 bg-slate-50 p-2">
-                  <div className="h-36 rounded-xl overflow-hidden bg-white border border-slate-200 flex items-center justify-center">
-                    {certificateImageFailed ? (
-                      <img
-                        src="/file.svg"
-                        alt="Certificate placeholder"
-                        className="w-14 h-14 object-contain opacity-70"
-                      />
-                    ) : (
-                      <img
-                        src={CERTIFICATE_IMAGE_SOURCES[certificateSrcIndex]}
-                        alt="Business registration certificate"
-                        className="w-full h-full object-contain"
-                        onError={() => {
-                          if (certificateSrcIndex < CERTIFICATE_IMAGE_SOURCES.length - 1) {
-                            setCertificateSrcIndex((prev) => prev + 1);
-                          } else {
-                            setCertificateImageFailed(true);
-                          }
-                        }}
-                      />
-                    )}
-                  </div>
-                  <p className="mt-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                    {certificateImageFailed ? "Certificate image not found" : "Business Registration Certification"}
-                  </p>
+          <Card className="p-8 border-none rounded-[35px] bg-white shadow-xl shadow-slate-200/50 lg:col-span-5">
+            <h3 className="text-[11px] font-black uppercase text-orange-600 tracking-[0.3em] mb-6">Verification Assets</h3>
+            <div className="space-y-6">
+              <div className="group relative rounded-3xl overflow-hidden bg-slate-50 border-2 border-slate-100 p-3 hover:border-orange-200 transition-colors">
+                <div className="h-40 rounded-2xl overflow-hidden bg-white flex items-center justify-center">
+                  {certificateImageFailed ? (
+                    <div className="flex flex-col items-center gap-2 opacity-40">
+                        <Briefcase size={40} />
+                        <span className="text-[10px] font-black">DOCUMENT_PENDING</span>
+                    </div>
+                  ) : (
+                    <img
+                      src={CERTIFICATE_IMAGE_SOURCES[certificateSrcIndex]}
+                      alt="Certificate"
+                      className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-500"
+                      onError={() => {
+                        if (certificateSrcIndex < CERTIFICATE_IMAGE_SOURCES.length - 1) {
+                          setCertificateSrcIndex((prev) => prev + 1);
+                        } else {
+                          setCertificateImageFailed(true);
+                        }
+                      }}
+                    />
+                  )}
                 </div>
-
-                {certificates.length > 0 ? (
-                  <ul className="space-y-2 max-h-28 overflow-y-auto pr-1">
-                    {certificates.map((file: File) => (
-                      <li key={`${file.name}-${file.lastModified}`} className="text-xs font-bold text-slate-600 bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
-                        {file.name}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm font-bold text-slate-400 italic">No certificates uploaded</p>
-                )}
+                <div className="mt-4 flex items-center justify-between px-1">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Registration Cert</p>
+                    <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center"><ShieldCheck size={12} className="text-white" /></div>
+                </div>
               </div>
+
+              {certificates.length > 0 && (
+                <div className="space-y-2">
+                  {certificates.map((file: File, idx) => (
+                    <div key={idx} className="flex items-center gap-3 text-xs font-bold text-slate-600 bg-slate-50 px-4 py-3 rounded-2xl border border-slate-100">
+                      <div className="w-2 h-2 rounded-full bg-blue-400" /> {file.name}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </Card>
         </div>
 
-        <Card className="p-6 md:p-8 border border-slate-100 rounded-3xl bg-white shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        {/* --- RECENT WORKS SECTION --- */}
+        <div className="space-y-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-slate-900">
-                Recent <span className="text-blue-700">Works</span>
-              </h2>
-              <p className="text-slate-500 font-bold italic text-sm mt-1">Add and showcase your latest startup projects with live demos.</p>
+                <div className="h-1.5 w-12 bg-orange-500 rounded-full mb-3" />
+                <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900 leading-none">
+                    Startup <span className="text-blue-700">Portfolio</span>
+                </h2>
+                <p className="text-slate-400 font-bold text-sm mt-2">Displaying your recent milestones and projects</p>
             </div>
             <AddProjectModal onAddProject={handleAddRecentWork} />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {recentWorks.map((work) => (
-              <div key={work.id} className="rounded-[28px] border border-slate-100 bg-white p-4 shadow-sm hover:shadow-lg hover:shadow-blue-100/30 transition-all">
-                <div className="aspect-video rounded-2xl overflow-hidden border border-slate-100 mb-4">
-                  <img src={work.images[0]} alt={work.title} className="w-full h-full object-cover" />
+              <Card key={work.id} className="group overflow-hidden rounded-[35px] border-none bg-white shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:shadow-blue-200/30 transition-all duration-500 border-b-8 border-blue-700">
+                <div className="relative aspect-video overflow-hidden">
+                  <img src={work.images[0]} alt={work.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-black text-blue-700 shadow-sm uppercase">{work.date}</div>
                 </div>
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-base font-black text-slate-900 uppercase leading-tight">{work.title}</h3>
-                  <span className="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded-lg uppercase">{work.date}</span>
+                <div className="p-8">
+                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{work.title}</h3>
+                  <p className="text-slate-500 font-bold text-sm mt-3 leading-relaxed min-h-[3rem]">{work.description}</p>
+                  <div className="flex gap-3 mt-8">
+                    <Button variant="outline" className="flex-1 rounded-2xl border-slate-200 font-black text-[10px] uppercase h-12 hover:bg-slate-50" onClick={() => work.github && window.open(work.github, "_blank")}>
+                      <Github size={16} className="mr-2" /> Repository
+                    </Button>
+                    <Button className="flex-1 bg-blue-700 hover:bg-blue-800 text-white rounded-2xl font-black text-[10px] uppercase h-12 shadow-lg shadow-blue-100" onClick={() => work.demo && window.open(work.demo, "_blank")}>
+                      View Project <ExternalLink size={16} className="ml-2" />
+                    </Button>
+                  </div>
                 </div>
-                <p className="text-sm text-slate-500 font-bold italic mt-2 line-clamp-2">{work.description}</p>
-
-                <div className="flex gap-2 mt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1 rounded-xl border-slate-200 font-bold"
-                    onClick={() => {
-                      if (work.github) {
-                        window.open(work.github, "_blank", "noopener,noreferrer");
-                      }
-                    }}
-                  >
-                    <Github size={14} className="mr-2" /> Code
-                  </Button>
-                  <Button
-                    type="button"
-                    className="flex-1 bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-black text-[11px]"
-                    onClick={() => {
-                      if (work.demo) {
-                        window.open(work.demo, "_blank", "noopener,noreferrer");
-                      }
-                    }}
-                  >
-                    Live Demo <ExternalLink size={14} className="ml-2" />
-                  </Button>
-                </div>
-              </div>
+              </Card>
             ))}
           </div>
-        </Card>
+        </div>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-slate-900">
-              Suggested <span className="text-orange-600">Talent</span>
-            </h2>
-            <p className="text-slate-500 font-bold italic text-sm">Best matches for {displayIndustry} projects</p>
+        {/* --- TALENT SUGGESTIONS --- */}
+        <div className="space-y-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center text-green-700">
+                    <Users size={24} strokeWidth={3} />
+                </div>
+                <div>
+                    <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-900 leading-none">
+                        Top <span className="text-green-600">Matches</span>
+                    </h2>
+                    <p className="text-slate-400 font-bold text-xs mt-1 uppercase tracking-widest">AI-Curated talent for your industry</p>
+                </div>
+            </div>
+            <Button variant="ghost" className="font-black text-[11px] uppercase tracking-widest text-blue-700 hover:bg-blue-50 rounded-xl px-6">
+              Explore All Talent
+            </Button>
           </div>
-          <Button variant="ghost" className="font-black text-[10px] uppercase tracking-widest text-blue-700 hover:bg-blue-50">
-            View All Talent
-          </Button>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {TALENT_ITEMS.map((student) => {
-            const matchPercentage = parseInt(student.match);
-            const circumference = 2 * Math.PI * 45;
-            const strokeDashoffset = circumference - (matchPercentage / 100) * circumference;
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {TALENT_ITEMS.map((student) => {
+              const matchPercentage = parseInt(student.match);
+              const circumference = 2 * Math.PI * 45;
+              const strokeDashoffset = circumference - (matchPercentage / 100) * circumference;
+              
+              const matchColor = matchPercentage >= 95 ? "#10b981" : matchPercentage >= 90 ? "#3b82f6" : "#f59e0b";
 
-            return (
-              <Card key={student.name} className="group p-6 border border-slate-100 rounded-3xl hover:shadow-xl hover:shadow-blue-100/30 transition-all duration-300 bg-white overflow-hidden relative">
-                <div className="flex items-start gap-5 mb-6">
-                  {/* Circular Match Score */}
-                  <div className="relative w-24 h-24 shrink-0">
-                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                      <circle cx="50" cy="50" r="45" fill="none" stroke="#e2e8f0" strokeWidth="4" />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="45"
-                        fill="none"
-                        stroke={matchPercentage >= 95 ? "#10b981" : matchPercentage >= 90 ? "#3b82f6" : "#f59e0b"}
-                        strokeWidth="4"
-                        strokeDasharray={circumference}
-                        strokeDashoffset={strokeDashoffset}
-                        strokeLinecap="round"
-                        className="transition-all duration-500"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-2xl font-black text-slate-900">{matchPercentage}</span>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">MATCH</span>
+              return (
+                <Card key={student.name} className="group p-8 border-none rounded-[35px] bg-white shadow-xl shadow-slate-200/40 hover:-translate-y-2 transition-all duration-300">
+                  <div className="flex flex-col items-center text-center mb-8">
+                    <div className="relative w-32 h-32 mb-6">
+                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="#f1f5f9" strokeWidth="6" />
+                        <circle
+                          cx="50" cy="50" r="45" fill="none"
+                          stroke={matchColor}
+                          strokeWidth="6"
+                          strokeDasharray={circumference}
+                          strokeDashoffset={strokeDashoffset}
+                          strokeLinecap="round"
+                          className="transition-all duration-1000"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-3xl font-black text-slate-900">{matchPercentage}%</span>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Match</span>
+                      </div>
+                    </div>
+
+                    <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-700 font-black text-2xl italic mb-4 shadow-inner">
+                        {student.name.charAt(0)}
+                    </div>
+                    <h3 className="text-lg font-black uppercase text-slate-900 tracking-tight">{student.name}</h3>
+                    <p className="text-blue-600 font-black text-[10px] uppercase tracking-widest mt-1 bg-blue-50 px-3 py-1 rounded-full">{student.role}</p>
+                  </div>
+
+                  <div className="space-y-3 mb-8">
+                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] text-center">Core Expertise</p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {student.skills.map((skill) => (
+                        <span key={skill} className="bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-xl text-[10px] font-black text-slate-600 uppercase">
+                          {skill}
+                        </span>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Talent Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-700 font-black text-sm italic mb-2">
-                      {student.name.charAt(0)}
-                    </div>
-                    <h3 className="text-sm font-black italic uppercase text-slate-900 truncate">{student.name}</h3>
-                    <p className="text-slate-400 font-bold text-[9px] uppercase tracking-widest mt-1">{student.role}</p>
-                  </div>
-                </div>
-
-                {/* Skills */}
-                <div className="mb-5">
-                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Top Skills</p>
-                  <div className="flex flex-wrap gap-2">
-                    {student.skills.map((skill) => (
-                      <span key={skill} className="bg-blue-50 border border-blue-100 px-2 py-1 rounded-lg text-[9px] font-bold text-blue-700 uppercase">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* CTA Button */}
-                <Button onClick={() => handleContactTalent(student.name)} className="w-full bg-blue-700 hover:bg-blue-800 text-white rounded-xl py-3 font-black text-[10px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2 group">
-                  Contact Talent <ArrowUpRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-                </Button>
-              </Card>
-            );
-          })}
+                  <Button onClick={() => handleContactTalent(student.name)} className="w-full bg-slate-900 hover:bg-blue-700 text-white rounded-2xl py-7 font-black text-[11px] uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-3">
+                    Inquire Now <ArrowUpRight size={18} />
+                  </Button>
+                </Card>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="pt-2 flex justify-center">
+        {/* --- FOOTER MANAGE ACTION --- */}
+        <div className="pt-10 flex justify-center">
           <Button
             onClick={() => {
               setEditForm(startupProfile);
               setIsManageOpen(true);
             }}
-            className="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-md shadow-blue-100 transition-all active:scale-95"
+            variant="outline"
+            className="border-2 border-blue-700 text-blue-700 hover:bg-blue-700 hover:text-white px-10 py-7 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl shadow-blue-100"
           >
-            Manage Your Startup
+            Manage Dashboard Settings
           </Button>
         </div>
 
+        {/* --- NOTIFICATION TOAST --- */}
         {notificationMessage && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 animate-in fade-in duration-300">
-            <div className="bg-green-600 text-white px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg">
-              {notificationMessage}
+          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-10 duration-500">
+            <div className="bg-green-600 text-white px-10 py-5 rounded-[20px] font-black text-xs uppercase tracking-widest shadow-2xl flex items-center gap-3">
+              <ShieldCheck size={20} /> {notificationMessage}
             </div>
           </div>
         )}
@@ -460,6 +455,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
   );
 };
 
+// --- REFINED STAT CARD COMPONENT ---
 const StatCard = ({
   label,
   value,
@@ -468,20 +464,22 @@ const StatCard = ({
 }: {
   label: string;
   value: string;
-  tone: "blue" | "orange";
+  tone: "blue" | "orange" | "green";
   icon: React.ReactNode;
-}) => (
-  <Card
-    className={`p-6 border rounded-3xl shadow-sm flex items-center gap-4 ${
-      tone === "blue"
-        ? "bg-blue-50 border-blue-100 text-blue-700"
-        : "bg-orange-50 border-orange-100 text-orange-700"
-    }`}
-  >
-    <div className="p-3 rounded-xl bg-white/70">{icon}</div>
-    <div>
-      <p className="text-[10px] font-black uppercase tracking-widest opacity-70">{label}</p>
-      <p className="text-3xl font-black italic text-slate-900">{value}</p>
-    </div>
-  </Card>
-);
+}) => {
+    const tones = {
+        blue: "bg-blue-50 border-blue-100 text-blue-700 shadow-blue-100/50",
+        orange: "bg-orange-50 border-orange-100 text-orange-700 shadow-orange-100/50",
+        green: "bg-green-50 border-green-100 text-green-700 shadow-green-100/50",
+    };
+
+    return (
+        <Card className={`p-8 border-none rounded-[35px] shadow-xl transition-transform hover:scale-[1.02] duration-300 flex items-center gap-6 ${tones[tone]}`}>
+          <div className="p-4 rounded-[20px] bg-white shadow-sm">{icon}</div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-1">{label}</p>
+            <p className="text-4xl font-black text-slate-900 tracking-tighter">{value}</p>
+          </div>
+        </Card>
+    );
+};
