@@ -154,7 +154,7 @@ export default function EditMyItemPage() {
         images: formData.images,
       });
 
-      router.push("/uni-mart/my-items");
+      router.push("/modules/uni-mart/my-items");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update product";
       setSubmitError(message);

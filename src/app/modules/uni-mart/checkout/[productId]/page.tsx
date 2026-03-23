@@ -81,7 +81,7 @@ export default function CheckoutPage() {
         "Order created successfully! Your receipt has been uploaded for verification."
       );
       setTimeout(() => {
-        router.push("/uni-mart/purchase-history");
+        router.push("/modules/uni-mart/purchase-history");
       }, 2000);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to process order";
@@ -170,7 +170,7 @@ export default function CheckoutPage() {
         "Handover request sent to seller! They will confirm the meeting details with you soon."
       );
       setTimeout(() => {
-        router.push("/uni-mart/purchase-history");
+        router.push("/modules/uni-mart/purchase-history");
       }, 2000);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to process handover meeting";

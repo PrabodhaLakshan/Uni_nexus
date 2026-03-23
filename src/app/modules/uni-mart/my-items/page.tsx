@@ -113,7 +113,7 @@ export default function MyItemsPage() {
             You haven't posted any items yet. Start selling today!
           </p>
           <Link
-            href="/uni-mart/new"
+            href="/modules/uni-mart/new"
             className="inline-block bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 font-medium"
           >
             Post Your First Item
@@ -160,7 +160,7 @@ export default function MyItemsPage() {
                 {/* Actions */}
                 <div className="flex gap-2 pt-4 border-t">
                   <Link
-                    href={`/uni-mart/my-items/${product.id}/edit`}
+                    href={`/modules/uni-mart/my-items/${product.id}/edit`}
                     className="flex-1 flex items-center justify-center gap-2 bg-blue-50 text-blue-600 py-2 rounded-lg hover:bg-blue-100 font-medium transition-colors"
                   >
                     <Edit2 size={16} />

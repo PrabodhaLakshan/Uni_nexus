@@ -205,7 +205,7 @@ export default function ProductDetailsPage() {
     if (confirm("Are you sure you want to delete this product?")) {
       try {
         await deleteProduct(product.id);
-        router.push("/uni-mart/my-items");
+        router.push("/modules/uni-mart/my-items");
       } catch (error) {
         console.error("Failed to delete product:", error);
         alert("Failed to delete product");

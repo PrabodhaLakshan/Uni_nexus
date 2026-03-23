@@ -114,7 +114,7 @@ export default function PostItemPage() {
       await createProduct(validatedData);
 
       // Success - redirect to products page
-      router.push("/uni-mart/my-items");
+      router.push("/modules/uni-mart/my-items");
     } catch (error: unknown) {
       console.error("Product creation error:", error);
       if (error instanceof ZodError) {

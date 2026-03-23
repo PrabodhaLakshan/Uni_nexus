@@ -175,7 +175,7 @@ export default function UniMartHome() {
                 </p>
               </div>
               <button
-                onClick={() => router.push("/uni-mart/products")}
+                onClick={() => router.push("/modules/uni-mart/products")}
                 className="mt-6 w-full bg-white text-gray-900 py-3 px-6 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
               >
                 Search Now
@@ -231,13 +231,13 @@ export default function UniMartHome() {
           <p className="text-gray-600 mb-4">Ready to start trading?</p>
           <div className="flex gap-4 justify-center">
             <button
-              onClick={() => router.push("/uni-mart/products")}
+              onClick={() => router.push("/modules/uni-mart/products")}
               className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg"
             >
               Browse Products
             </button>
             <button
-              onClick={() => router.push("/uni-mart/new")}
+              onClick={() => router.push("/modules/uni-mart/new")}
               className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors shadow-md hover:shadow-lg border-2 border-blue-600"
             >
               Post an Item

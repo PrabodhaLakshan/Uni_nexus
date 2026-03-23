@@ -75,7 +75,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     fetchSellerStats();
   }, [product.sellerId]);
   return (
-    <Link href={`/uni-mart/products/${product.id}`}>
+    <Link href={`/modules/uni-mart/products/${product.id}`}>
       <div className={`${oxanium.className} group h-full cursor-pointer overflow-hidden rounded-2xl border border-white/70 bg-white/80 shadow-[0_10px_28px_rgba(15,23,42,0.08)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(37,99,235,0.16)]`}>
         {/* Product Image */}
         <div className="relative h-48 w-full bg-slate-100">
