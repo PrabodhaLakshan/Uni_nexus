@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Users, Zap, Briefcase, Bell, ArrowUpRight, User, Star, Github, ExternalLink } from "lucide-react";
+import { Plus, Users, Zap, Briefcase, ArrowUpRight, Github, ExternalLink } from "lucide-react";
 import { PostGigModal } from "./PostGigModal";
 import { AddProjectModal } from "./AddProjectModal";
+import { DashboardLayout } from "./DashboardLayout";
 
 type StartupProfile = {
   name: string;
@@ -141,39 +141,8 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
   const displayIndustry = startupProfile.industry || "Technology";
 
   return (
-    <div className="min-h-screen bg-slate-50/70 pt-24 px-4 md:px-8 pb-10">
+    <DashboardLayout contentClassName="space-y-8">
       <PostGigModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-
-      <nav className="fixed top-0 left-0 w-full bg-white/95 backdrop-blur-sm border-b border-slate-100 px-6 md:px-10 py-4 flex justify-between items-center z-50 shadow-sm">
-        <div className="text-2xl font-black italic tracking-tighter text-slate-900">
-          UNI<span className="text-blue-700">NEXUS</span>
-        </div>
-
-        <div className="hidden md:flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-500 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
-          <Link href="/startup-connect" className="px-4 py-2 rounded-xl hover:bg-white hover:text-blue-700 transition-colors flex items-center gap-2">
-            <User size={14} /> Account
-          </Link>
-          <Link href="/startup-connect/talent-pool" className="px-4 py-2 rounded-xl hover:bg-white hover:text-blue-700 transition-colors flex items-center gap-2">
-            <Users size={14} /> Talent Pool
-          </Link>
-          <Link href="/startup-connect/applicants" className="px-4 py-2 rounded-xl hover:bg-white hover:text-blue-700 transition-colors flex items-center gap-2">
-            <Briefcase size={14} /> Applications
-          </Link>
-          <Link href="/dashboard/startup" className="px-4 py-2 rounded-xl hover:bg-white hover:text-blue-700 transition-colors flex items-center gap-2">
-            <Star size={14} /> Reviews
-          </Link>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button type="button" className="p-2 rounded-xl text-slate-400 hover:text-orange-500 hover:bg-orange-50 transition-colors">
-            <Bell size={18} />
-          </button>
-          <div className="w-10 h-10 bg-blue-700 rounded-xl text-white flex items-center justify-center font-black uppercase tracking-tighter border-2 border-blue-100 shadow-sm">
-            {displayName.charAt(0)}
-          </div>
-        </div>
-      </nav>
-
       <div className="max-w-6xl mx-auto space-y-8">
         <Card className="p-6 md:p-8 border border-slate-100 rounded-3xl bg-white shadow-sm">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
@@ -187,7 +156,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
               </div>
 
               <div>
-                <h1 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-slate-900 leading-tight">
+                <h1 className="text-3xl md:text-5xl font-black   tracking-tighter text-slate-900 leading-tight">
                   Welcome, <span className="text-blue-700">{displayName}</span>
                 </h1>
                 <p className="text-slate-500 font-bold italic mt-1">{displayIndustry} Innovation Sector</p>
@@ -487,7 +456,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
           </div>
         )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

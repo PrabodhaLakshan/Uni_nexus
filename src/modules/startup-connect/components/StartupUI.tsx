@@ -16,7 +16,7 @@ export const StartupUI = ({ onPostGigClick }: { onPostGigClick: () => void }) =>
             Startup Connect Portal
           </p>
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tighter text-gray-950 leading-tight">
-            Innovate. <span className="text-orange-600">Connect.</span> <span className="text-blue-700">Thrive.</span>
+            <span className="text-green-600">Innovate.</span> <span className="text-orange-600">Connect.</span> <span className="text-blue-700">Thrive.</span>
           </h1>
           <p className="text-slate-600 text-base md:text-xl max-w-3xl mx-auto font-medium leading-relaxed">
             For the first time in Sri Lanka, startup opportunities that match the talents of campus students and the skilled individuals needed by founders—brought together on a single platform.
@@ -77,7 +77,7 @@ export const StartupUI = ({ onPostGigClick }: { onPostGigClick: () => void }) =>
               <Link href="/startup-connect/browse-gigs">
                 <Button
                   aria-label="Browse available gigs"
-                  className="w-full bg-gray-900 hover:bg-black text-white font-semibold py-6 rounded-xl group flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-slate-300"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-6 rounded-xl group flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-green-300"
                 >
                   Explore Now <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>

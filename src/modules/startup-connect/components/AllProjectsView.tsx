@@ -28,7 +28,7 @@ export const AllProjectsView = () => {
     { 
       title: "Skill Share", 
       desc: "Peer-to-peer learning application for networking.",
-      image: "" // මෙතන හිස්ව තැබුවොත් placeholder එකක් පේනවා
+      image: "" 
     },
   ];
 

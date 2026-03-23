@@ -1,35 +1,28 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 // Components ටික නිවැරදි Path එකෙන් Import කරගන්න
 import { StartupUI } from "@/modules/startup-connect/components/StartupUI"; 
 import { StartupRegisterForm } from "@/modules/startup-connect/components/StartupRegisterForm";
-import { StartupDashboardView } from "@/modules/startup-connect/components/StartupDashboardView";
 
 export default function StartupConnectPage() {
+  const router = useRouter();
   
-  const [currentView, setCurrentView] = useState<'landing' | 'register' | 'dashboard'>('landing');
-  
- 
-  const [startupData, setStartupData] = useState({
-    name: '',
-    industry: '',
-    about: ''
-  });
+  const [currentView, setCurrentView] = useState<'landing' | 'register'>('landing');
 
   
   const goToRegister = () => setCurrentView('register');
-  const goToDashboard = () => setCurrentView('dashboard');
+  const goToDashboard = () => router.push('/startup-connect/dashboard');
 
-  // 2. Register Form එක Submit කරාම Dashboard එකට යවන function එක
-  const finishRegistration = (data: any) => {
-    setStartupData(data); // Data ටික Save කරගන්නවා
-    setCurrentView('dashboard'); // Dashboard එකට මාරු කරනවා
+ 
+  const finishRegistration = () => {
+    router.push('/startup-connect/dashboard'); 
   };
 
   return (
     <main className="min-h-screen bg-white">
-      {/* දැනට තියෙන View එක අනුව Component එක පෙන්වනවා */}
+     
       
       {currentView === 'landing' && (
         <StartupUI onPostGigClick={goToRegister} />
@@ -39,9 +32,6 @@ export default function StartupConnectPage() {
         <StartupRegisterForm onComplete={finishRegistration} onAlreadyHaveAccount={goToDashboard} />
       )}
 
-      {currentView === 'dashboard' && (
-        <StartupDashboardView data={startupData} />
-      )}
     </main>
   );
 }

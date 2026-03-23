@@ -44,10 +44,10 @@ export default function StartupConnectAboutPage() {
       <section className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <p className="inline-flex items-center gap-2 bg-orange-50 text-orange-600 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
-            <Sparkles className="w-3.5 h-3.5" /> Startup Connect
+            
           </p>
-          <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-slate-950">
-            How <span className="text-blue-700">This</span> <span className="text-orange-600">System Works</span>
+          <h1 className="text-4xl md:text-6xl font-black  tracking-tighter text-slate-950">
+            <span className="text-green-600">How</span> <span className="text-blue-700">This</span> <span className="text-orange-600">System Works</span>
           </h1>
           <p className="mt-5 text-lg text-slate-600 leading-relaxed max-w-3xl mx-auto">
             UniNexus connects startup founders with university talent through a simple project workflow designed for speed, clarity, and skill-first collaboration.
@@ -84,7 +84,7 @@ export default function StartupConnectAboutPage() {
 
         <div className="rounded-[32px] border border-slate-100 p-8 md:p-10 bg-linear-to-r from-blue-50/60 to-orange-50/60">
           <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-slate-950 mb-5">
-            Why Teams Love <span className="text-blue-700">UniNexus</span>
+            <span className="text-green-600">Why Teams Love</span> <span className="text-blue-700">UniNexus?</span>
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {benefits.map((benefit) => (
