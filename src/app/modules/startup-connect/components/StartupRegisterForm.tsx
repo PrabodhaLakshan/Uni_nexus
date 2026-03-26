@@ -276,7 +276,7 @@ export const StartupRegisterForm = ({
                 disabled={isSubmitting}
                 className="w-fit px-8 bg-slate-100 hover:bg-slate-200 text-slate-600 h-11 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-slate-200 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Login
+                Already registered?
               </Button>
             </div>
           </div>
