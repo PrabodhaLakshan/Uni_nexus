@@ -17,6 +17,7 @@ type Invite = {
         year: number | null;
         semester: number | null;
         avatar_path: string | null;
+        avatar_url?: string | null;
         skills: string[];
     };
     group: {
@@ -156,6 +157,20 @@ export default function GroupInvites() {
                                     className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-5 transition-all sm:flex-row sm:items-center sm:justify-between"
                                 >
                                     <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white text-sm font-bold text-blue-600 shadow-sm">
+                                            {invite.sender.avatar_url ? (
+                                                <Image
+                                                    src={invite.sender.avatar_url}
+                                                    alt={invite.sender.name}
+                                                    className="h-full w-full object-cover"
+                                                    width={48}
+                                                    height={48}
+                                                />
+                                            ) : (
+                                                invite.sender.name.charAt(0).toUpperCase()
+                                            )}
+                                        </div>
+
                                         <div>
                                             <p className="font-medium text-slate-900">
                                                 <span className="font-bold">{invite.sender.name}</span> invited you to join
@@ -200,6 +215,13 @@ export default function GroupInvites() {
                                     </div>
 
                                     <div className="flex shrink-0 items-center gap-3 border-t border-slate-200 pt-4 sm:border-t-0 sm:pt-0">
+                                        <button
+                                            type="button"
+                                            onClick={() => router.push(`/project-group-finder/students/${invite.sender.id}`)}
+                                            className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-200 sm:flex-none"
+                                        >
+                                            View Profile
+                                        </button>
                                         <button
                                             onClick={() => handleAction(invite.id, "reject")}
                                             disabled={actionLoading === invite.id}

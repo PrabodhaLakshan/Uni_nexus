@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { requireUserFromRequest } from "@/lib/auth-server";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export async function GET(req: Request) {
     try {
@@ -52,13 +53,26 @@ export async function GET(req: Request) {
             },
         });
 
+        const getAvatarUrl = (avatarPath: string | null) => {
+            if (!avatarPath) return null;
+
+            const { data } = supabaseAdmin.storage
+                .from("avatars")
+                .getPublicUrl(avatarPath);
+
+            return data.publicUrl;
+        };
+
         return NextResponse.json({
             invites: invites.map((invite: any) => ({
                 id: invite.id.toString(),
                 status: invite.status,
                 created_at: invite.created_at,
                 group_id: invite.group_id?.toString() ?? null,
-                sender: invite.users_project_group_invites_sender_idTousers,
+                sender: {
+                    ...invite.users_project_group_invites_sender_idTousers,
+                    avatar_url: getAvatarUrl(invite.users_project_group_invites_sender_idTousers.avatar_path),
+                },
                 group: invite.project_group
                     ? {
                         id: invite.project_group.id.toString(),
@@ -71,7 +85,10 @@ export async function GET(req: Request) {
                             user_id: member.user_id,
                             role: member.role,
                             joined_at: member.joined_at,
-                            user: member.users,
+                            user: {
+                                ...member.users,
+                                avatarUrl: getAvatarUrl(member.users.avatar_path),
+                            },
                         })),
                     }
                     : null,
