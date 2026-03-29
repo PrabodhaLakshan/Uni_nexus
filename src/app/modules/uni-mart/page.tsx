@@ -199,10 +199,10 @@ export default function UniMartHome() {
     return ids.size;
   }, [availableProducts]);
 
-  const averagePrice = useMemo(() => {
+   const averagePrice = useMemo(() => {
     if (availableProducts.length === 0) return 0;
-    const total = availableProducts.reduce((acc, item) => acc + item.price, 0);
-    return Math.round(total / availableProducts.length);
+    // Number() දමා price එක අනිවාර්යයෙන්ම ඉලක්කමක් බවට හරවන්න
+    const total = availableProducts.reduce((acc, item) => acc + Number(item.price), 0);    return Math.round(total / availableProducts.length);
   }, [availableProducts]);
 
   const listedCategories = useMemo(() => {
