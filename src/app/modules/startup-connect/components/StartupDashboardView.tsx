@@ -34,6 +34,7 @@ type Gig = {
   budget: string;
   deadline: string;
   description: string;
+  skills: string[];
 };
 
 const TALENT_ITEMS: TalentItem[] = [
@@ -219,6 +220,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
                 budget: gig.budget,
                 deadline: gig.deadline,
                 description: gig.description,
+                skills: gig.skills,
               }
             : existing
         );
@@ -232,6 +234,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
           budget: gig.budget,
           deadline: gig.deadline,
           description: gig.description,
+          skills: gig.skills,
         },
         ...prev,
       ];
