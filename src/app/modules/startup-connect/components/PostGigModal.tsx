@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { X, DollarSign, Calendar, Zap } from "lucide-react";
+import { X, DollarSign, Calendar, Zap, Plus } from "lucide-react";
 
 export interface GigFormValues {
   id?: number;
@@ -12,6 +12,7 @@ export interface GigFormValues {
   budget: string;
   deadline: string;
   description: string;
+   skills: string[];
 }
 
 interface PostGigModalProps {
@@ -26,6 +27,8 @@ export const PostGigModal = ({ isOpen, onClose, initialGig, onSubmitGig }: PostG
   const [budget, setBudget] = useState("");
   const [deadline, setDeadline] = useState("");
   const [description, setDescription] = useState("");
+  const [skills, setSkills] = useState<string[]>([]);
+  const [skillInput, setSkillInput] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
 
   const [errors, setErrors] = useState<{
@@ -33,6 +36,7 @@ export const PostGigModal = ({ isOpen, onClose, initialGig, onSubmitGig }: PostG
     budget?: string;
     deadline?: string;
     description?: string;
+    skills?: string;
   }>({});
 
  
@@ -50,18 +54,41 @@ export const PostGigModal = ({ isOpen, onClose, initialGig, onSubmitGig }: PostG
       setBudget(initialGig.budget || "");
       setDeadline(initialGig.deadline || "");
       setDescription(initialGig.description || "");
+      setSkills(initialGig.skills || []);
     } else {
       setTitle("");
       setBudget("");
       setDeadline("");
       setDescription("");
+      setSkills([]);
     }
+
+    setSkillInput("");
 
     setErrors({});
     setShowSuccess(false);
   }, [isOpen, initialGig]);
 
   if (!isOpen) return null;
+
+  const handleAddSkill = () => {
+    const trimmed = skillInput.trim();
+    if (!trimmed) return;
+
+    const exists = skills.some((s) => s.toLowerCase() === trimmed.toLowerCase());
+    if (exists) {
+      setSkillInput("");
+      return;
+    }
+
+    setSkills((prev) => [...prev, trimmed]);
+    setSkillInput("");
+    setErrors((prev) => ({ ...prev, skills: undefined }));
+  };
+
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setSkills((prev) => prev.filter((skill) => skill !== skillToRemove));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,6 +134,11 @@ export const PostGigModal = ({ isOpen, onClose, initialGig, onSubmitGig }: PostG
       newErrors.description = "Description is too long (Max 1000 chars).";
     }
 
+    // 5. Skills Validation
+    if (!skills.length) {
+      newErrors.skills = "Please add at least one required skill.";
+    }
+
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
@@ -116,6 +148,7 @@ export const PostGigModal = ({ isOpen, onClose, initialGig, onSubmitGig }: PostG
         budget,
         deadline,
         description: trimmedDescription,
+        skills,
       };
 
       if (onSubmitGig) {
@@ -194,9 +227,60 @@ export const PostGigModal = ({ isOpen, onClose, initialGig, onSubmitGig }: PostG
             </div>
           </div>
 
+          {/* Required Skills */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-blue-700 ml-1">Required Skills</label>
+            <div className="relative">
+              <Input
+                placeholder="e.g. React, TypeScript"
+                className="rounded-2xl border-gray-100 bg-gray-50/50 py-7 pr-14 font-bold text-gray-700 focus:ring-2 focus:ring-blue-500"
+                value={skillInput}
+                onChange={(e) => setSkillInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddSkill();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleAddSkill}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl bg-blue-700 text-white p-2 hover:bg-blue-800 transition-colors active:scale-95 flex items-center justify-center"
+                aria-label="Add skill"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+            {errors.skills && (
+              <p className="text-xs font-semibold text-red-500 mt-1 ml-1">{errors.skills}</p>
+            )}
+
+            {skills.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-1">
+                {skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="inline-flex items-center gap-1 rounded-full bg-blue-600 text-white text-xs font-semibold px-3 py-1"
+                  >
+                    {skill}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSkill(skill)}
+                      className="ml-1 hover:text-orange-200 focus:outline-none"
+                      aria-label={`Remove ${skill}`}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Description */}
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-blue-700 ml-1">Gig Description & Skills Required</label>
+            <label className="text-[10px] font-black uppercase text-blue-700 ml-1">Gig Description</label>
             <Textarea
               placeholder="Tell students what you need..."
               className="rounded-2xl border-gray-100 bg-gray-50/50 font-bold min-h-35 pt-5 text-gray-700"
