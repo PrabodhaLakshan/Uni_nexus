@@ -64,6 +64,7 @@ export default function GroupDashboardPage({ groupId, onLeaveSuccess }: GroupDas
 
     // Role changing state
     const [changingRole, setChangingRole] = useState<string | null>(null);
+    const [removingMember, setRemovingMember] = useState<string | null>(null);
 
     const currentUserToken = typeof window !== "undefined" ? localStorage.getItem("pgf_token") : null;
     let currentUserId: string | null = null;
@@ -140,11 +141,11 @@ export default function GroupDashboardPage({ groupId, onLeaveSuccess }: GroupDas
         }
     };
 
-    const handleChangeRole = async (memberId: string, newRole: string) => {
-        setChangingRole(memberId);
+    const handleChangeRole = async (memberUserId: string, newRole: string) => {
+        setChangingRole(memberUserId);
         try {
             const token = localStorage.getItem("pgf_token");
-            const res = await fetch(`/api/project-group-finder/groups/${groupId}/members/${memberId}/role`, {
+            const res = await fetch(`/api/project-group-finder/groups/${groupId}/members/${memberUserId}/role`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -161,13 +162,50 @@ export default function GroupDashboardPage({ groupId, onLeaveSuccess }: GroupDas
                 if (!prev) return prev;
                 return {
                     ...prev,
-                    members: prev.members.map(m => m.id === memberId ? { ...m, role: newRole } : m)
+                    members: prev.members.map((m) =>
+                        m.user_id === memberUserId ? { ...m, role: newRole } : m
+                    )
                 };
             });
         } catch (err: any) {
             alert(err.message || "Failed to update role");
         } finally {
             setChangingRole(null);
+        }
+    };
+
+    const handleRemoveMember = async (member: Member) => {
+        const confirmed = window.confirm(`Remove ${member.user.name} from this group?`);
+        if (!confirmed) return;
+
+        setRemovingMember(member.user_id);
+        try {
+            const token = localStorage.getItem("pgf_token");
+            const res = await fetch(`/api/project-group-finder/groups/${groupId}/members/${member.user_id}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to remove member");
+
+            alert(data.message || "Member removed successfully");
+            setGroup((prev) => {
+                if (!prev) return prev;
+
+                const nextMembers = prev.members.filter((m) => m.user_id !== member.user_id);
+                return {
+                    ...prev,
+                    members: nextMembers,
+                    status: data.status || prev.status,
+                };
+            });
+        } catch (err: any) {
+            alert(err.message || "Failed to remove member");
+        } finally {
+            setRemovingMember(null);
         }
     };
 
@@ -450,15 +488,25 @@ export default function GroupDashboardPage({ groupId, onLeaveSuccess }: GroupDas
                                             <li key={member.id} className="flex items-center justify-between">
                                                 <span className="text-sm text-slate-700 truncate mr-2">{member.user.name}</span>
                                                 {member.user_id !== currentUserId ? (
-                                                    <select
-                                                        disabled={changingRole === member.id}
-                                                        value={member.role}
-                                                        onChange={(e) => handleChangeRole(member.id, e.target.value)}
-                                                        className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                    >
-                                                        <option value="member">Member</option>
-                                                        <option value="leader">Leader</option>
-                                                    </select>
+                                                    <div className="flex items-center gap-2">
+                                                        <select
+                                                            disabled={changingRole === member.user_id || removingMember === member.user_id}
+                                                            value={member.role}
+                                                            onChange={(e) => handleChangeRole(member.user_id, e.target.value)}
+                                                            className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                        >
+                                                            <option value="member">Member</option>
+                                                            <option value="leader">Leader</option>
+                                                        </select>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveMember(member)}
+                                                            disabled={changingRole === member.user_id || removingMember === member.user_id}
+                                                            className="rounded-lg bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                                        >
+                                                            {removingMember === member.user_id ? "Removing..." : "Remove"}
+                                                        </button>
+                                                    </div>
                                                 ) : (
                                                     <span className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 rounded-lg">You ({member.role})</span>
                                                 )}

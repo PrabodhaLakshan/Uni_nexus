@@ -85,13 +85,17 @@ export default function StudentProfilePage() {
     const handleInvite = async () => {
         setInviting(true);
         try {
+            const token = localStorage.getItem("pgf_token");
             const res = await fetch("/api/project-group-finder/invite", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
                 body: JSON.stringify({ receiverId: studentId }),
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
+            if (!res.ok) throw new Error(data.error || "Failed to send invite");
             alert("Invite sent successfully!");
         } catch (err: any) {
             alert(err.message || "Failed to send invite");

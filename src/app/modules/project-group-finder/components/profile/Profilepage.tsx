@@ -15,6 +15,13 @@ import SkillsSection from "./SkillsSection";
 import AcademicInfoSection, { AcademicInfoData } from "./AcademicInfoSection";
 import type { ProfileProject, GroupStatus } from "@/app/modules/project-group-finder/types";
 
+type ProfilePageUser = {
+  id: string;
+  name: string;
+  email: string;
+  student_id: string;
+};
+
 function StatBox({
   label,
   value,
@@ -46,7 +53,7 @@ function StatBox({
   );
 }
 
-export default function ProfilePage() {
+export default function ProfilePage({ user }: { user: ProfilePageUser }) {
   const [profile, setProfile] = useState<StudentProfile>({
     id: "",
     fullName: "",
@@ -86,21 +93,9 @@ export default function ProfilePage() {
           setLoading(false);
           return;
         }
+        const userId = user.id;
 
-        // Step 1: get userId from /api/me
-        const meRes = await fetch("/api/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!meRes.ok) {
-          setError("Failed to load your profile. Please log in again.");
-          setLoading(false);
-          return;
-        }
-        const meData = await meRes.json();
-        const user = meData.user;
-        const userId = user.id as string;
-
-        // Step 2: fetch profile fields, projects and saved marks in parallel
+        // Fetch profile fields, projects and saved marks in parallel.
         const [profileRes, projectsRes, resultsRes] = await Promise.all([
           fetch(`/api/project-group-finder/profile?userId=${userId}`),
           fetch(`/api/project-group-finder/projects?userId=${userId}`),
@@ -165,7 +160,7 @@ export default function ProfilePage() {
       }
     }
     fetchProfile();
-  }, []);
+  }, [user]);
 
   // ── Shared PUT helper ─────────────────────────────────────────────────────
   const saveToDb = useCallback(

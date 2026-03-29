@@ -115,6 +115,8 @@ function DashboardPanel({
 
   const filteredResults = React.useMemo(() => {
     return results.filter((result) => {
+      if (result.isInGroup) return false;
+
       if (advancedFilters.smartMatch === "strong" && result.matchScore < 70) return false;
       if (advancedFilters.smartMatch === "medium" && result.matchScore < 50) return false;
 
@@ -254,7 +256,7 @@ function DashboardPanel({
         <ProfileCard profile={myProfile} />
       </div>
 
-      {hasSearched && results.length > 0 && (
+      {hasSearched && filteredResults.length > 0 && (
         <section className="rounded-2xl border border-blue-100/60 bg-white/95 p-4 shadow-sm backdrop-blur-xl">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h4 className="text-sm font-bold text-slate-800">Smart Result Filters</h4>
@@ -353,7 +355,7 @@ function DashboardPanel({
         results={filteredResults}
         loading={loading}
         hasSearched={hasSearched}
-        totalCount={results.length}
+        totalCount={filteredResults.length}
         onRequest={handleInvite}
         onClearResults={clearResults}
       />

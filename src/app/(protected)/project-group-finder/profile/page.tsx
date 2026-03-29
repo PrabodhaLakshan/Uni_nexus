@@ -9,6 +9,12 @@ import ProfilePage from "@/app/modules/project-group-finder/components/profile/P
 import LeftSidebar, { NavKey } from "@/app/modules/project-group-finder/components/LeftSidebar";
 
 type Panel = NavKey;
+type ProfileUser = {
+  id: string;
+  name: string;
+  email: string;
+  student_id: string;
+};
 
 export default function ProfilePageRoute() {
   const { user, loading } = useAuth();
@@ -48,7 +54,14 @@ export default function ProfilePageRoute() {
 
       {/* Main content area — offset by sidebar width on desktop */}
       <div className="lg:pl-[260px]">
-        <ProfilePage />
+        <ProfilePage
+          user={{
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            student_id: user.student_id,
+          } satisfies ProfileUser}
+        />
       </div>
     </div>
   );
