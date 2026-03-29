@@ -18,7 +18,7 @@ export default function StudentSidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="w-[280px] h-screen bg-white border-r border-slate-100 flex flex-col pt-8 pb-6 px-5 relative z-20">
+    <div className="sticky top-0 self-start w-[280px] h-screen bg-white border-r border-slate-100 flex flex-col pt-8 pb-6 px-5 relative z-20">
 
       {/* Brand Logo */}
       <div className="flex items-center gap-3 px-3 mb-10">
