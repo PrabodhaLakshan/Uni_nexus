@@ -42,11 +42,9 @@ export default function Home() {
 
       {/* Animated Education Icons Background */}
       <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden">
-        {/* Soft Background Gradients */}
         <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-blue-400/20 rounded-full mix-blend-multiply filter blur-[100px]"></div>
         <div className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] bg-emerald-400/20 rounded-full mix-blend-multiply filter blur-[100px]"></div>
 
-        {/* Floating Icons */}
         <Lightbulb className="icon-float" style={{ left: '8%', animationDuration: '22s', animationDelay: '0s', width: '40px', height: '40px' }} />
         <Book className="icon-float" style={{ left: '22%', animationDuration: '28s', animationDelay: '4s', width: '30px', height: '30px' }} />
         <GraduationCap className="icon-float" style={{ left: '38%', animationDuration: '25s', animationDelay: '2s', width: '45px', height: '45px' }} />
@@ -57,18 +55,22 @@ export default function Home() {
         <BookOpen className="icon-float" style={{ left: '68%', animationDuration: '27s', animationDelay: '12s', width: '35px', height: '35px' }} />
       </div>
 
-      {/* Main Content Area - Strictly Centered & Resized */}
       <div className="relative z-10 w-full max-w-[850px] mx-auto px-4 sm:px-6 flex flex-col justify-center h-full max-h-[750px]">
         
-        {/* Header Section */}
+        {/* Header Section - Modernized Styling */}
         <div className="text-center flex-none mb-6 md:mb-8">
-          <div className="inline-flex items-center gap-1.5 mb-3 px-3 py-1 rounded-full bg-white/70 backdrop-blur-md border border-slate-200 shadow-sm text-blue-600 text-xs font-bold tracking-widest uppercase">
-            <GraduationCap className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-1.5 mb-4 px-3 py-1 rounded-full bg-white/70 backdrop-blur-md border border-slate-200 shadow-sm text-blue-600 text-[10px] font-bold tracking-[0.2em] uppercase">
+            <GraduationCap className="w-3 h-3" />
             UniNexus
           </div>
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-800 mb-2 md:mb-3 tracking-tight">
-            Tutor <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500">Connect</span>
+          
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-3">
+            <span className="text-indigo-950">Tutor </span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-emerald-500">
+              Connect
+            </span>
           </h1>
+
           <p className="text-sm md:text-base text-slate-500 font-medium max-w-lg mx-auto leading-relaxed px-2">
             Find your perfect learning match. Connect, learn, and grow together.
           </p>
@@ -79,7 +81,6 @@ export default function Home() {
           
           {/* Tutor Card */}
           <div className="group relative bg-white/70 backdrop-blur-xl rounded-2xl md:rounded-[24px] p-5 md:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(37,99,235,0.08)] border border-white transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col">
-            {/* Background Watermark Icon */}
             <GraduationCap className="absolute -bottom-6 -right-6 w-40 h-40 text-blue-100/60 group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-700 pointer-events-none" />
             
             <div className="relative z-10 mb-4 md:mb-5">
@@ -97,7 +98,7 @@ export default function Home() {
                 onClick={handleTutorClick}
                 className="w-full flex items-center justify-between group/btn py-3 px-5 rounded-xl bg-slate-50 hover:bg-blue-600 border border-slate-200 hover:border-blue-600 text-slate-700 hover:text-white font-semibold text-sm transition-all duration-300 shadow-sm"
               >
-                <span>Register as Tutor</span>
+                <span>Continue as Tutor</span>
                 <ArrowRight className="w-4 h-4 text-blue-600 group-hover/btn:text-white group-hover/btn:translate-x-1 transition-all" />
               </button>
             </div>
@@ -105,7 +106,6 @@ export default function Home() {
 
           {/* Student Card */}
           <div className="group relative bg-white/70 backdrop-blur-xl rounded-2xl md:rounded-[24px] p-5 md:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(16,185,129,0.08)] border border-white transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col">
-            {/* Background Watermark Icon */}
             <Search className="absolute -bottom-6 -right-6 w-40 h-40 text-emerald-100/60 group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-700 pointer-events-none" />
             
             <div className="relative z-10 mb-4 md:mb-5">
