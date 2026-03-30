@@ -161,27 +161,27 @@ export const PostGigModal = ({ isOpen, onClose, initialGig, onSubmitGig }: PostG
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-slate-950/40 backdrop-blur-md p-4 animate-in fade-in duration-300">
-      <Card className="max-w-2xl w-full bg-white rounded-[40px] shadow-2xl border-none p-10 relative overflow-hidden">
-        
-        {/* Decorative background element */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-orange-100 rounded-full blur-3xl opacity-50" />
+      <Card className="max-w-2xl w-full bg-white rounded-[40px] shadow-2xl border-none relative overflow-hidden">
+        <div className="max-h-[calc(100vh-4rem)] md:max-h-[calc(100vh-6rem)] overflow-y-auto p-6 md:p-10">
+          {/* Decorative background element */}
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-orange-100 rounded-full blur-3xl opacity-50" />
 
-        {/* Close Button */}
-        <button onClick={onClose} className="absolute top-8 right-8 text-gray-400 hover:text-orange-600 transition-colors z-10">
-          <X size={24} strokeWidth={3} />
-        </button>
+          {/* Close Button */}
+          <button onClick={onClose} className="absolute top-8 right-8 text-gray-400 hover:text-orange-600 transition-colors z-10">
+            <X size={24} strokeWidth={3} />
+          </button>
 
-        <div className="mb-10 flex items-center gap-4 relative">
-          <div className="w-14 h-14 bg-blue-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
-            <Zap size={24} fill="currentColor" />
+          <div className="mb-10 flex items-center gap-4 relative">
+            <div className="w-14 h-14 bg-blue-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+              <Zap size={24} fill="currentColor" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-black tracking-tighter text-gray-950">Post a New <span className="text-orange-600">Gig</span></h2>
+              <p className="text-gray-400 font-bold text-[10px] uppercase tracking-[0.2em]">Hire the best campus talent</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-3xl font-black tracking-tighter text-gray-950">Post a New <span className="text-orange-600">Gig</span></h2>
-            <p className="text-gray-400 font-bold text-[10px] uppercase tracking-[0.2em]">Hire the best campus talent</p>
-          </div>
-        </div>
 
-        <form className="space-y-6 relative" onSubmit={handleSubmit}>
+          <form className="space-y-6 relative" onSubmit={handleSubmit}>
           {/* Gig Title */}
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase text-blue-700 ml-1">Gig Title</label>
@@ -290,23 +290,24 @@ export const PostGigModal = ({ isOpen, onClose, initialGig, onSubmitGig }: PostG
             {errors.description && <p className="text-xs font-semibold text-red-500 mt-1 ml-1">{errors.description}</p>}
           </div>
 
-          {/* Buttons */}
-          <div className="pt-4 flex gap-4">
-             <Button
-               type="button"
-               onClick={onClose}
-               className="flex-0.5 bg-gray-100 hover:bg-gray-200 text-gray-600 py-4 md:py-6 rounded-xl md:rounded-2xl font-black text-sm md:text-base transition-all active:scale-95 border-none"
-             >
-               Cancel
-             </Button>
-             <Button
-               type="submit"
-               className="flex-0.5 bg-blue-700 hover:bg-blue-800 text-white py-4 md:py-6 rounded-xl font-black text-sm md:text-base shadow-xl shadow-blue-100 transition-all active:scale-95"
-             >
-               Publish Opportunity
-             </Button>
-          </div>
-        </form>
+            {/* Buttons */}
+            <div className="pt-4 flex gap-4">
+               <Button
+                 type="button"
+                 onClick={onClose}
+                 className="flex-0.5 bg-gray-100 hover:bg-gray-200 text-gray-600 py-4 md:py-6 rounded-xl md:rounded-2xl font-black text-sm md:text-base transition-all active:scale-95 border-none"
+               >
+                 Cancel
+               </Button>
+               <Button
+                 type="submit"
+                 className="flex-0.5 bg-blue-700 hover:bg-blue-800 text-white py-4 md:py-6 rounded-xl font-black text-sm md:text-base shadow-xl shadow-blue-100 transition-all active:scale-95"
+               >
+                 Publish Opportunity
+               </Button>
+            </div>
+          </form>
+        </div>
 
         {showSuccess && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 backdrop-blur-sm">
