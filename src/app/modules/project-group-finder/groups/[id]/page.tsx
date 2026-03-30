@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { FileImage, FileText, Film, Link2, Trash2, Upload } from "lucide-react";
 
 import ProfileCard, { StudentProfile } from "../../components/ProfileCard";
 
@@ -40,6 +41,67 @@ type Group = {
     members: Member[];
 };
 
+type ResourceKind = "document" | "image" | "video";
+
+type ProjectResource = {
+    name: string;
+    path: string;
+    kind: ResourceKind;
+    size: number | null;
+    createdAt: string | null;
+    updatedAt: string | null;
+    uploaderId: string;
+    url: string | null;
+    canDelete: boolean;
+};
+
+const RESOURCE_OPTIONS: Array<{
+    kind: ResourceKind;
+    label: string;
+    accept: string;
+    description: string;
+}> = [
+    {
+        kind: "document",
+        label: "Document",
+        accept: ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.zip,.rar",
+        description: "PDFs, docs, slides, sheets, archives",
+    },
+    {
+        kind: "image",
+        label: "Image",
+        accept: "image/*",
+        description: "JPG, PNG, WEBP, GIF",
+    },
+    {
+        kind: "video",
+        label: "Video",
+        accept: "video/mp4,video/webm,video/quicktime,video/x-matroska",
+        description: "MP4, WEBM, MOV, MKV",
+    },
+];
+
+function formatBytes(bytes: number | null) {
+    if (!bytes) return "Unknown size";
+
+    const units = ["B", "KB", "MB", "GB"];
+    let value = bytes;
+    let unitIndex = 0;
+
+    while (value >= 1024 && unitIndex < units.length - 1) {
+        value /= 1024;
+        unitIndex += 1;
+    }
+
+    return `${value >= 10 || unitIndex === 0 ? value.toFixed(0) : value.toFixed(1)} ${units[unitIndex]}`;
+}
+
+function getResourceIcon(kind: ResourceKind) {
+    if (kind === "image") return FileImage;
+    if (kind === "video") return Film;
+    return FileText;
+}
+
 type GroupDashboardPageProps = {
     groupId: string;
     onLeaveSuccess?: () => void;
@@ -65,6 +127,11 @@ export default function GroupDashboardPage({ groupId, onLeaveSuccess }: GroupDas
     // Role changing state
     const [changingRole, setChangingRole] = useState<string | null>(null);
     const [removingMember, setRemovingMember] = useState<string | null>(null);
+    const [resources, setResources] = useState<ProjectResource[]>([]);
+    const [resourceError, setResourceError] = useState<string | null>(null);
+    const [resourceLoading, setResourceLoading] = useState(true);
+    const [uploadingKind, setUploadingKind] = useState<ResourceKind | null>(null);
+    const [deletingResourcePath, setDeletingResourcePath] = useState<string | null>(null);
 
     const currentUserToken = typeof window !== "undefined" ? localStorage.getItem("pgf_token") : null;
     let currentUserId: string | null = null;
@@ -106,9 +173,102 @@ export default function GroupDashboardPage({ groupId, onLeaveSuccess }: GroupDas
         }
     };
 
+    const fetchResources = async () => {
+        try {
+            setResourceError(null);
+            const token = localStorage.getItem("pgf_token");
+            if (!token) {
+                router.push("/auth/login");
+                return;
+            }
+
+            const res = await fetch(`/api/project-group-finder/groups/${groupId}/resources`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || "Failed to load resources");
+            }
+
+            setResources(data.resources || []);
+        } catch (err: any) {
+            setResourceError(err.message || "Failed to load resources");
+        } finally {
+            setResourceLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchGroup();
+        fetchResources();
     }, [groupId, router]);
+
+    const handleResourceUpload = async (kind: ResourceKind, file: File | null) => {
+        if (!file) return;
+
+        setUploadingKind(kind);
+        setResourceError(null);
+
+        try {
+            const token = localStorage.getItem("pgf_token");
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("kind", kind);
+
+            const res = await fetch(`/api/project-group-finder/groups/${groupId}/resources`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || "Failed to upload resource");
+            }
+
+            setResources((prev) => [data.resource, ...prev]);
+        } catch (err: any) {
+            setResourceError(err.message || "Failed to upload resource");
+        } finally {
+            setUploadingKind(null);
+        }
+    };
+
+    const handleDeleteResource = async (resource: ProjectResource) => {
+        const confirmed = window.confirm(`Delete ${resource.name}?`);
+        if (!confirmed) return;
+
+        setDeletingResourcePath(resource.path);
+        setResourceError(null);
+
+        try {
+            const token = localStorage.getItem("pgf_token");
+            const res = await fetch(`/api/project-group-finder/groups/${groupId}/resources`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ path: resource.path }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || "Failed to delete resource");
+            }
+
+            setResources((prev) => prev.filter((item) => item.path !== resource.path));
+        } catch (err: any) {
+            setResourceError(err.message || "Failed to delete resource");
+        } finally {
+            setDeletingResourcePath(null);
+        }
+    };
 
     const handleUpdateGroup = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -386,6 +546,127 @@ export default function GroupDashboardPage({ groupId, onLeaveSuccess }: GroupDas
                                     <p className="mt-2 whitespace-pre-wrap text-slate-600">
                                         {group.description || "No description provided."}
                                     </p>
+                                </div>
+
+                                <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                        <div>
+                                            <h3 className="text-lg font-bold text-slate-900">Project Resources</h3>
+                                            <p className="mt-1 text-sm text-slate-500">
+                                                Group-specific documents, images, and videos for this project.
+                                            </p>
+                                        </div>
+                                        <span className="inline-flex w-fit rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
+                                            {resources.length} files
+                                        </span>
+                                    </div>
+
+                                    <div className="mt-5 grid gap-3 md:grid-cols-3">
+                                        {RESOURCE_OPTIONS.map((option) => (
+                                            <label
+                                                key={option.kind}
+                                                className="cursor-pointer rounded-2xl border border-dashed border-slate-300 bg-white p-4 transition hover:border-blue-300 hover:bg-blue-50/40"
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <div className="rounded-xl bg-blue-100 p-2 text-blue-700">
+                                                        <Upload className="h-4 w-4" />
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-semibold text-slate-900">
+                                                            Add {option.label}
+                                                        </p>
+                                                        <p className="mt-1 text-xs leading-5 text-slate-500">
+                                                            {uploadingKind === option.kind
+                                                                ? "Uploading..."
+                                                                : option.description}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <input
+                                                    type="file"
+                                                    accept={option.accept}
+                                                    className="hidden"
+                                                    disabled={uploadingKind !== null}
+                                                    onChange={(event) => {
+                                                        const selectedFile = event.target.files?.[0] || null;
+                                                        void handleResourceUpload(option.kind, selectedFile);
+                                                        event.target.value = "";
+                                                    }}
+                                                />
+                                            </label>
+                                        ))}
+                                    </div>
+
+                                    {resourceError && (
+                                        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                                            {resourceError}
+                                        </div>
+                                    )}
+
+                                    <div className="mt-5 space-y-3">
+                                        {resourceLoading ? (
+                                            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-5 text-sm text-slate-500">
+                                                Loading project resources...
+                                            </div>
+                                        ) : resources.length === 0 ? (
+                                            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-5 text-sm text-slate-500">
+                                                No resources yet. Upload the first file for this group.
+                                            </div>
+                                        ) : (
+                                            resources.map((resource) => {
+                                                const Icon = getResourceIcon(resource.kind);
+
+                                                return (
+                                                    <div
+                                                        key={resource.path}
+                                                        className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
+                                                    >
+                                                        <div className="flex min-w-0 items-start gap-3">
+                                                            <div className="rounded-xl bg-slate-100 p-2 text-slate-700">
+                                                                <Icon className="h-5 w-5" />
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <p className="truncate text-sm font-semibold text-slate-900">
+                                                                    {resource.name}
+                                                                </p>
+                                                                <p className="mt-1 text-xs text-slate-500">
+                                                                    {resource.kind.charAt(0).toUpperCase() + resource.kind.slice(1)} • {formatBytes(resource.size)}
+                                                                    {resource.createdAt
+                                                                        ? ` • ${new Date(resource.createdAt).toLocaleDateString()}`
+                                                                        : ""}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-2">
+                                                            {resource.url && (
+                                                                <a
+                                                                    href={resource.url}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                                                                >
+                                                                    <Link2 className="h-4 w-4" />
+                                                                    Open
+                                                                </a>
+                                                            )}
+                                                            {resource.canDelete && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleDeleteResource(resource)}
+                                                                    disabled={deletingResourcePath === resource.path}
+                                                                    className="inline-flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                    {deletingResourcePath === resource.path ? "Deleting..." : "Delete"}
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         )}
