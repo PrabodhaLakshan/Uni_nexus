@@ -7,6 +7,7 @@ import {
   Clock,
   Users,
   XCircle,
+  Pencil,
   ArrowRightCircle,
   Sparkles,
   Loader2,
@@ -218,6 +219,14 @@ export default function SlotsPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="h-12 px-6 rounded-2xl font-bold text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100 transition-all flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    <Pencil className="w-4 h-4" />
+                    <span>Edit</span>
+                  </button>
+
                   <button
                     onClick={() => handleDelete(slot.id)}
                     disabled={deletingId === slot.id}
