@@ -538,7 +538,7 @@ export default function TutorProfilePage({ tutorId }: Props) {
       </div>
 
       {showFeedbackForm && tutor && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
           <button
             type="button"
             aria-label="Close feedback form overlay"
@@ -546,20 +546,20 @@ export default function TutorProfilePage({ tutorId }: Props) {
             className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
           />
 
-          <div className="relative z-10 w-full max-w-2xl overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_25px_80px_rgba(15,23,42,0.22)]">
-            <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 px-6 py-6 text-white sm:px-8">
-              <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
-              <div className="absolute -bottom-10 left-10 h-24 w-24 rounded-full bg-sky-200/20 blur-2xl" />
+          <div className="relative z-10 flex max-h-[calc(100vh-1.5rem)] w-full max-w-xl flex-col overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_25px_80px_rgba(15,23,42,0.22)] sm:max-h-[calc(100vh-2rem)]">
+            <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 px-5 py-5 text-white sm:px-6 sm:py-5">
+              <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
+              <div className="absolute -bottom-10 left-10 h-20 w-20 rounded-full bg-sky-200/20 blur-2xl" />
 
               <div className="relative flex items-start justify-between gap-4">
                 <div>
-                  <p className="mb-2 text-xs font-black uppercase tracking-[0.28em] text-blue-100">
+                  <p className="mb-1.5 text-[11px] font-black uppercase tracking-[0.24em] text-blue-100">
                     Student Review
                   </p>
-                  <h3 className="text-2xl font-bold tracking-tight">
+                  <h3 className="text-xl font-bold tracking-tight sm:text-2xl">
                     Share feedback for {tutor.name}
                   </h3>
-                  <p className="mt-2 max-w-xl text-sm text-blue-100">
+                  <p className="mt-1.5 max-w-lg text-sm text-blue-100/90">
                     Your thoughts help this tutor improve future sessions for students.
                   </p>
                 </div>
@@ -575,25 +575,25 @@ export default function TutorProfilePage({ tutorId }: Props) {
               </div>
             </div>
 
-            <div className="p-6 sm:p-8">
+            <div className="overflow-y-auto p-5 sm:p-6">
               {feedbackSuccess ? (
-                <div className="py-8 text-center">
-                  <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                    <CheckCircle2 className="h-10 w-10" />
+                <div className="py-6 text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                    <CheckCircle2 className="h-8 w-8" />
                   </div>
-                  <h4 className="text-2xl font-bold text-slate-800">Feedback sent</h4>
+                  <h4 className="text-xl font-bold text-slate-800">Feedback sent</h4>
                   <p className="mt-2 text-sm text-slate-500">{feedbackSuccess}</p>
                 </div>
               ) : (
-                <form onSubmit={handleSubmitFeedback} className="space-y-6">
-                  <div className="grid gap-4 sm:grid-cols-[1.15fr_0.85fr]">
-                    <div className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-5">
+                <form onSubmit={handleSubmitFeedback} className="space-y-5">
+                  <div className="grid gap-3 sm:grid-cols-[1.1fr_0.9fr]">
+                    <div className="rounded-[20px] border border-slate-200 bg-slate-50/80 p-4">
                       <p className="text-sm font-bold text-slate-700">Overall rating</p>
-                      <p className="mt-1 text-sm text-slate-500">
+                      <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-sm">
                         Pick a score based on your tutoring experience.
                       </p>
 
-                      <div className="mt-5 flex items-center gap-2">
+                      <div className="mt-4 flex items-center gap-1.5">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button
                             key={star}
@@ -610,7 +610,7 @@ export default function TutorProfilePage({ tutorId }: Props) {
                             className="transition-transform hover:scale-110 active:scale-95"
                           >
                             <Star
-                              className={`h-10 w-10 ${
+                              className={`h-8 w-8 sm:h-9 sm:w-9 ${
                                 star <= (hoveredRating || feedbackRating)
                                   ? "fill-amber-400 text-amber-400"
                                   : "text-slate-200"
@@ -620,7 +620,7 @@ export default function TutorProfilePage({ tutorId }: Props) {
                         ))}
                       </div>
 
-                      <p className="mt-4 text-sm font-semibold text-slate-600">
+                      <p className="mt-3 text-sm font-semibold text-slate-600">
                         {feedbackRating === 0
                           ? "Select a rating to continue."
                           : `${feedbackRating} out of 5 stars`}
@@ -633,16 +633,16 @@ export default function TutorProfilePage({ tutorId }: Props) {
                       )}
                     </div>
 
-                    <div className="rounded-[24px] border border-blue-100 bg-gradient-to-br from-blue-50 to-sky-50 p-5">
+                    <div className="rounded-[20px] border border-blue-100 bg-gradient-to-br from-blue-50 to-sky-50 p-4">
                       <p className="text-sm font-bold text-slate-700">Quick notes</p>
-                      <div className="mt-4 space-y-3 text-sm text-slate-600">
-                        <div className="rounded-2xl border border-white/70 bg-white/70 px-4 py-3">
+                      <div className="mt-3 space-y-2.5 text-sm text-slate-600">
+                        <div className="rounded-xl border border-white/70 bg-white/70 px-3.5 py-2.5">
                           Clear explanations
                         </div>
-                        <div className="rounded-2xl border border-white/70 bg-white/70 px-4 py-3">
+                        <div className="rounded-xl border border-white/70 bg-white/70 px-3.5 py-2.5">
                           Helpful examples
                         </div>
-                        <div className="rounded-2xl border border-white/70 bg-white/70 px-4 py-3">
+                        <div className="rounded-xl border border-white/70 bg-white/70 px-3.5 py-2.5">
                           Friendly and engaging session
                         </div>
                       </div>
@@ -666,7 +666,7 @@ export default function TutorProfilePage({ tutorId }: Props) {
                           subject: undefined,
                         }));
                       }}
-                      className={`w-full rounded-[18px] px-4 py-3 text-sm font-medium outline-none transition-all focus:bg-white focus:ring-4 ${
+                      className={`w-full rounded-[16px] px-4 py-2.5 text-sm font-medium outline-none transition-all focus:bg-white focus:ring-4 ${
                         feedbackErrors.subject
                           ? "border border-red-300 bg-red-50 text-slate-700 focus:border-red-400 focus:ring-red-500/10"
                           : "border border-slate-200 bg-slate-50 text-slate-700 focus:border-blue-400 focus:ring-blue-500/10"
@@ -696,7 +696,7 @@ export default function TutorProfilePage({ tutorId }: Props) {
                     </label>
                     <textarea
                       id="feedback-comment"
-                      rows={5}
+                      rows={4}
                       value={feedbackComment}
                       onChange={(e) => {
                         setFeedbackComment(e.target.value);
@@ -706,7 +706,7 @@ export default function TutorProfilePage({ tutorId }: Props) {
                         }));
                       }}
                       placeholder="Write a few words about the tutor's teaching style, clarity, and how helpful the session was."
-                      className={`w-full resize-none rounded-[20px] px-4 py-3 text-sm outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:ring-4 ${
+                      className={`w-full resize-none rounded-[18px] px-4 py-3 text-sm outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:ring-4 ${
                         feedbackErrors.comment
                           ? "border border-red-300 bg-red-50 text-slate-700 focus:border-red-400 focus:ring-red-500/10"
                           : "border border-slate-200 bg-slate-50 text-slate-700 focus:border-blue-400 focus:ring-blue-500/10"
@@ -736,20 +736,20 @@ export default function TutorProfilePage({ tutorId }: Props) {
                     </div>
                   </div>
 
-                  <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center justify-end gap-3">
                       <button
                         type="button"
                         onClick={closeFeedbackForm}
                         disabled={isSubmittingFeedback}
-                        className="rounded-xl px-5 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         disabled={isSubmittingFeedback}
-                        className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all ${
+                        className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-all ${
                           isSubmittingFeedback
                             ? "cursor-not-allowed bg-blue-300"
                             : "bg-blue-600 shadow-lg shadow-blue-200 hover:bg-blue-700"
