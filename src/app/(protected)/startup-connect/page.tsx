@@ -19,6 +19,14 @@ export default function StartupConnectPage() {
 
  
   const finishRegistration = (data: any) => {
+    try {
+      const id = typeof data?.id === "string" ? data.id.trim() : "";
+      if (id) {
+        localStorage.setItem("companyId", id);
+      }
+    } catch {
+      /* ignore */
+    }
     setProfile({
       name: data?.name || '',
       industry: data?.industry || '',

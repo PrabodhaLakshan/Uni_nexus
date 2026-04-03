@@ -36,87 +36,13 @@ function formatExpectedDeadlineLabel(createdAt: Date | null | undefined) {
 
 export async function GET() {
   try {
-    // Select only fields we know we need, to avoid "column does not exist"
-    // runtime errors when the live DB differs from Prisma schema.
-    let rows: Array<{
-      id: string;
-      title: string;
-      description: string;
-      created_at: Date | null;
-      companies: { id: string; name: string; industry?: string | null };
-    }> = [];
-
-    try {
-      rows = await prisma.gigs.findMany({
-        where: { status: "OPEN" },
-        orderBy: { created_at: "desc" },
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          created_at: true,
-          companies: {
-            select: {
-              id: true,
-              name: true,
-              industry: true,
-            },
-          },
-        },
-      });
-    } catch {
-      // Fallback if `created_at`/ordering isn't available.
-      try {
-        rows = await prisma.gigs.findMany({
-          where: { status: "OPEN" },
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            created_at: true,
-            companies: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        }).then((r: any[]) =>
-          r.map((x) => ({
-            id: x.id,
-            title: x.title,
-            description: x.description,
-            created_at: x.created_at ?? null,
-            companies: x.companies,
-          }))
-        );
-      } catch (fallbackErr) {
-        console.error("BROWSE_GIGS_FALLBACK_ERROR:", fallbackErr);
-        // Last-resort fallback: avoid selecting `created_at` too.
-        rows = await prisma.gigs.findMany({
-          where: { status: "OPEN" },
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            companies: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        }).then((r: any[]) =>
-          r.map((x) => ({
-            id: x.id,
-            title: x.title,
-            description: x.description,
-            created_at: null,
-            companies: x.companies,
-          }))
-        );
-      }
-    }
+    const rows = await prisma.gigs.findMany({
+      where: { status: "OPEN" },
+      orderBy: { created_at: "desc" },
+      include: {
+        companies: true,
+      },
+    });
 
     const mapped = rows.map((gig) => {
       const industry = gig.companies?.industry ?? "";
@@ -133,10 +59,9 @@ export async function GET() {
         startupId,
         category,
         description: gig.description,
-        // We don't select optional columns like `budget` or `requirements` (may be missing).
-        budget: "LKR —",
-        type: "Remote",
-        level: "Beginner",
+        budget: formatBudget(gig.budget as any),
+        type: gig.companies?.location ?? "Remote",
+        level: deriveLevel(Array.isArray(gig.requirements) ? gig.requirements.length : 0),
         postedLabel: formatPostedLabel(gig.created_at),
         expectedDeadline: formatExpectedDeadlineLabel(gig.created_at),
         logoUrl: null,

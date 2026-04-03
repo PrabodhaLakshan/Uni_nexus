@@ -1,68 +1,67 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
-import { formatDate, normalizeString } from "../../../_shared";
+import { formatDate, normalizeString, resolveCompanyId } from "../../../_shared";
 import { saveUploadedFile } from "../../../_upload";
 
 export const runtime = "nodejs";
 
-type Ctx = { params: { workId: string } } | { params: Promise<{ workId: string }> };
+type RouteContext = { params: { workId: string } } | { params: Promise<{ workId: string }> };
 
-async function resolveWorkId(ctx: Ctx) {
-  const maybePromise = (ctx as { params: Promise<{ workId: string }> }).params;
+async function getWorkId(context: RouteContext) {
+  const maybePromise = (context as { params: Promise<{ workId: string }> }).params;
   const params =
     typeof (maybePromise as Promise<{ workId: string }>)?.then === "function"
       ? await maybePromise
-      : (ctx as { params: { workId: string } }).params;
+      : (context as { params: { workId: string } }).params;
   return params?.workId?.trim() ?? "";
 }
 
-export async function PATCH(req: Request, ctx: Ctx) {
+export async function PATCH(req: Request, context: RouteContext) {
   try {
-    const workId = await resolveWorkId(ctx);
+    const workId = await getWorkId(context);
     if (!workId) {
       return NextResponse.json({ success: false, error: "workId is required." }, { status: 400 });
     }
 
-    const contentType = req.headers.get("content-type") || "";
-    let title = "";
-    let description = "";
-    let demo = "";
-    let imageUrl: string | null | undefined = undefined;
-
-    if (contentType.includes("multipart/form-data")) {
-      const form = await req.formData();
-      title = normalizeString(form.get("title"));
-      description = normalizeString(form.get("description"));
-      demo = normalizeString(form.get("demo"));
-
-      const firstImage = form
-        .getAll("images")
-        .find((item) => item instanceof File && item.size > 0);
-      if (firstImage instanceof File) {
-        imageUrl = await saveUploadedFile(firstImage, "portfolio");
-      }
-    } else {
-      const body = (await req.json()) as {
-        title?: unknown;
-        description?: unknown;
-        demo?: unknown;
-        images?: unknown;
-      };
-      title = normalizeString(body.title);
-      description = normalizeString(body.description);
-      demo = normalizeString(body.demo);
-      if (Array.isArray(body.images) && typeof body.images[0] === "string") {
-        imageUrl = body.images[0];
-      }
+    const companyId = await resolveCompanyId(req);
+    if (!companyId) {
+      return NextResponse.json(
+        { success: false, error: "No startup company found." },
+        { status: 404 }
+      );
     }
 
-    const data: { title?: string; description?: string; project_url?: string | null; image_url?: string | null } = {};
+    const existing = await prisma.company_recent_works.findFirst({
+      where: { id: workId, company_id: companyId },
+    });
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Project not found." }, { status: 404 });
+    }
+
+    const formData = await req.formData();
+    const title = normalizeString(formData.get("title"));
+    const description = normalizeString(formData.get("description"));
+    const demo = normalizeString(formData.get("demo"));
+    const github = normalizeString(formData.get("github"));
+    const imageFiles = formData
+      .getAll("images")
+      .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+
+    const data: {
+      title?: string;
+      description?: string;
+      project_url?: string | null;
+      image_url?: string | null;
+    } = {};
     if (title) data.title = title;
     if (description) data.description = description;
-    if (demo) data.project_url = demo;
-    if (imageUrl !== undefined) data.image_url = imageUrl;
+    if (demo !== undefined) data.project_url = demo || null;
 
-    const updated = await prisma.company_recent_works.update({
+    if (imageFiles.length > 0) {
+      data.image_url = await saveUploadedFile(imageFiles[0]!, "portfolio");
+    }
+
+    const work = await prisma.company_recent_works.update({
       where: { id: workId },
       data,
     });
@@ -70,13 +69,13 @@ export async function PATCH(req: Request, ctx: Ctx) {
     return NextResponse.json({
       success: true,
       data: {
-        id: updated.id,
-        title: updated.title,
-        description: updated.description,
-        github: null,
-        demo: updated.project_url ?? "",
-        date: formatDate(updated.created_at),
-        images: updated.image_url ? [updated.image_url] : [],
+        id: work.id,
+        title: work.title,
+        description: work.description,
+        github: github || "",
+        demo: work.project_url ?? "",
+        date: formatDate(work.created_at),
+        images: work.image_url ? [work.image_url] : [],
       },
     });
   } catch (error) {
@@ -86,13 +85,31 @@ export async function PATCH(req: Request, ctx: Ctx) {
   }
 }
 
-export async function DELETE(_: Request, ctx: Ctx) {
+export async function DELETE(req: Request, context: RouteContext) {
   try {
-    const workId = await resolveWorkId(ctx);
+    const workId = await getWorkId(context);
     if (!workId) {
       return NextResponse.json({ success: false, error: "workId is required." }, { status: 400 });
     }
+
+    const companyId = await resolveCompanyId(req);
+    if (!companyId) {
+      return NextResponse.json(
+        { success: false, error: "No startup company found." },
+        { status: 404 }
+      );
+    }
+
+    const existing = await prisma.company_recent_works.findFirst({
+      where: { id: workId, company_id: companyId },
+      select: { id: true },
+    });
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Project not found." }, { status: 404 });
+    }
+
     await prisma.company_recent_works.delete({ where: { id: workId } });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("STARTUP_RECENT_WORKS_DELETE_ERROR:", error);

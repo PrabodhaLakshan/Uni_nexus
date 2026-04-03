@@ -4,6 +4,10 @@ import { formatDate, resolveCompanyId } from "../_shared";
 
 export const runtime = "nodejs";
 
+/**
+ * Aggregates founder dashboard: company profile, gigs, recent works.
+ * Uses JWT → owned company (`owner_id`) so data saved at registration appears here.
+ */
 export async function GET(req: Request) {
   try {
     const companyId = await resolveCompanyId(req);
@@ -18,9 +22,6 @@ export async function GET(req: Request) {
       });
     }
 
-    // Important: Some DB environments may not have every column Prisma schema expects.
-    // So we use explicit `select` and layered fallbacks to prevent runtime
-    // "column does not exist" crashes (same issue we fixed for browse-gigs).
     let company: {
       id: string;
       name: string;
@@ -28,26 +29,6 @@ export async function GET(req: Request) {
       about: string;
     } | null = null;
 
-    let gigs: Array<{
-      id: string;
-      title: string;
-      description: string;
-      budget: any;
-      created_at: Date | null;
-      requirements: string[] | null;
-      status: string;
-    }> = [];
-
-    let recentWorks: Array<{
-      id: string;
-      title: string;
-      description: string;
-      project_url: string | null;
-      image_url: string | null;
-      created_at: Date | null;
-    }> = [];
-
-    // Company (avoid logo_url / certificate_url / location if missing in DB)
     try {
       company = await prisma.companies.findUnique({
         where: { id: companyId },
@@ -91,10 +72,19 @@ export async function GET(req: Request) {
       logoUrl = media?.logo_url ?? null;
       certificateUrls = media?.certificate_url ? [media.certificate_url] : [];
     } catch {
-      /* DB may not have logo_url / certificate_url columns */
+      /* optional columns */
     }
 
-    // Gigs
+    let gigs: Array<{
+      id: string;
+      title: string;
+      description: string;
+      budget: { toString: () => string } | null;
+      created_at: Date | null;
+      requirements: string[] | null;
+      status: string;
+    }> = [];
+
     try {
       gigs = await prisma.gigs.findMany({
         where: { company_id: companyId },
@@ -112,7 +102,7 @@ export async function GET(req: Request) {
     } catch (gigsErr) {
       console.error("STARTUP_DASHBOARD_GIGS_ERROR:", gigsErr);
       try {
-        gigs = await prisma.gigs.findMany({
+        const rows = await prisma.gigs.findMany({
           where: { company_id: companyId },
           select: {
             id: true,
@@ -121,20 +111,26 @@ export async function GET(req: Request) {
             created_at: true,
             status: true,
           },
-        }).then((r: any[]) =>
-          r.map((x) => ({
-            ...x,
-            budget: null,
-            requirements: [],
-          }))
-        );
-      } catch (gigsErr2) {
-        console.error("STARTUP_DASHBOARD_GIGS_FALLBACK_ERROR:", gigsErr2);
+        });
+        gigs = rows.map((x) => ({
+          ...x,
+          budget: null,
+          requirements: [],
+        }));
+      } catch {
         gigs = [];
       }
     }
 
-    // Recent works
+    let recentWorks: Array<{
+      id: string;
+      title: string;
+      description: string;
+      project_url: string | null;
+      image_url: string | null;
+      created_at: Date | null;
+    }> = [];
+
     try {
       recentWorks = await prisma.company_recent_works.findMany({
         where: { company_id: companyId },
@@ -151,7 +147,7 @@ export async function GET(req: Request) {
     } catch (worksErr) {
       console.error("STARTUP_DASHBOARD_WORKS_ERROR:", worksErr);
       try {
-        recentWorks = await prisma.company_recent_works.findMany({
+        const rows = await prisma.company_recent_works.findMany({
           where: { company_id: companyId },
           select: {
             id: true,
@@ -159,15 +155,13 @@ export async function GET(req: Request) {
             description: true,
             created_at: true,
           },
-        }).then((r: any[]) =>
-          r.map((x) => ({
-            ...x,
-            project_url: null,
-            image_url: null,
-          }))
-        );
-      } catch (worksErr2) {
-        console.error("STARTUP_DASHBOARD_WORKS_FALLBACK_ERROR:", worksErr2);
+        });
+        recentWorks = rows.map((x) => ({
+          ...x,
+          project_url: null,
+          image_url: null,
+        }));
+      } catch {
         recentWorks = [];
       }
     }
@@ -196,7 +190,7 @@ export async function GET(req: Request) {
           id: work.id,
           title: work.title,
           description: work.description,
-          github: null,
+          github: "",
           demo: work.project_url ?? "",
           date: formatDate(work.created_at),
           images: work.image_url ? [work.image_url] : [],

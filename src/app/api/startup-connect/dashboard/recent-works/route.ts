@@ -7,79 +7,86 @@ export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   try {
-    const url = new URL(req.url);
-    const companyId = await resolveCompanyId(req, url.searchParams.get("companyId") ?? undefined);
+    const companyId = await resolveCompanyId(req);
     if (!companyId) {
       return NextResponse.json({ success: true, data: [] });
     }
 
-    const rows = await prisma.company_recent_works.findMany({
-      where: { company_id: companyId },
-      orderBy: { created_at: "desc" },
-    });
+    let works: Array<{
+      id: string;
+      title: string;
+      description: string;
+      project_url: string | null;
+      image_url: string | null;
+      created_at: Date | null;
+    }> = [];
 
-    return NextResponse.json({
-      success: true,
-      data: rows.map((work) => ({
-        id: work.id,
-        title: work.title,
-        description: work.description,
-        github: null,
-        demo: work.project_url ?? "",
-        date: formatDate(work.created_at),
-        images: work.image_url ? [work.image_url] : [],
-      })),
-    });
+    try {
+      works = await prisma.company_recent_works.findMany({
+        where: { company_id: companyId },
+        orderBy: { created_at: "desc" },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          project_url: true,
+          image_url: true,
+          created_at: true,
+        },
+      });
+    } catch {
+      try {
+        const rows = await prisma.company_recent_works.findMany({
+          where: { company_id: companyId },
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            created_at: true,
+          },
+        });
+        works = rows.map((x) => ({ ...x, project_url: null, image_url: null }));
+      } catch {
+        works = [];
+      }
+    }
+
+    const data = works.map((work) => ({
+      id: work.id,
+      title: work.title,
+      description: work.description,
+      github: "",
+      demo: work.project_url ?? "",
+      date: formatDate(work.created_at),
+      images: work.image_url ? [work.image_url] : [],
+    }));
+
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error("STARTUP_RECENT_WORKS_GET_ERROR:", error);
-    const message = error instanceof Error ? error.message : "Failed to fetch recent works";
+    const message = error instanceof Error ? error.message : "Failed to load recent works";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
   try {
-    const contentType = req.headers.get("content-type") || "";
-    let title = "";
-    let description = "";
-    let demo = "";
-    let companyIdHint = "";
-    let imageUrl: string | null = null;
-
-    if (contentType.includes("multipart/form-data")) {
-      const form = await req.formData();
-      title = normalizeString(form.get("title"));
-      description = normalizeString(form.get("description"));
-      demo = normalizeString(form.get("demo"));
-      companyIdHint = normalizeString(form.get("companyId"));
-
-      const firstImage = form
-        .getAll("images")
-        .find((item) => item instanceof File && item.size > 0);
-
-      if (firstImage instanceof File) {
-        imageUrl = await saveUploadedFile(firstImage, "portfolio");
-      }
-    } else {
-      const body = (await req.json()) as {
-        title?: unknown;
-        description?: unknown;
-        github?: unknown;
-        demo?: unknown;
-        images?: unknown;
-        companyId?: unknown;
-      };
-      title = normalizeString(body.title);
-      description = normalizeString(body.description);
-      demo = normalizeString(body.demo);
-      companyIdHint = normalizeString(body.companyId);
-      imageUrl = Array.isArray(body.images) && typeof body.images[0] === "string" ? body.images[0] : null;
-    }
-
-    const companyId = await resolveCompanyId(req, companyIdHint);
+    const companyId = await resolveCompanyId(req);
     if (!companyId) {
-      return NextResponse.json({ success: false, error: "No startup company found." }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "No startup company found." },
+        { status: 404 }
+      );
     }
+
+    const formData = await req.formData();
+    const title = normalizeString(formData.get("title"));
+    const description = normalizeString(formData.get("description"));
+    const demo = normalizeString(formData.get("demo"));
+    const github = normalizeString(formData.get("github"));
+    const imageFiles = formData
+      .getAll("images")
+      .filter((entry): entry is File => entry instanceof File && entry.size > 0);
 
     if (!title || !description) {
       return NextResponse.json(
@@ -88,7 +95,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const created = await prisma.company_recent_works.create({
+    let imageUrl: string | null = null;
+    if (imageFiles.length > 0) {
+      imageUrl = await saveUploadedFile(imageFiles[0]!, "portfolio");
+    }
+
+    const work = await prisma.company_recent_works.create({
       data: {
         company_id: companyId,
         title,
@@ -101,13 +113,13 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       data: {
-        id: created.id,
-        title: created.title,
-        description: created.description,
-        github: null,
-        demo: created.project_url ?? "",
-        date: formatDate(created.created_at),
-        images: created.image_url ? [created.image_url] : [],
+        id: work.id,
+        title: work.title,
+        description: work.description,
+        github: github || "",
+        demo: work.project_url ?? "",
+        date: formatDate(work.created_at),
+        images: work.image_url ? [work.image_url] : [],
       },
     });
   } catch (error) {

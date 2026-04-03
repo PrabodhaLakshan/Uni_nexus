@@ -4,8 +4,8 @@ import { formatDate, resolveCompanyId } from "../../_shared";
 
 export const runtime = "nodejs";
 
-function displayStatus(status: string) {
-  const u = status.toUpperCase();
+function humanizeStatus(status: string) {
+  const u = status.trim().toUpperCase();
   if (u === "PENDING") return "Pending";
   if (u === "REVIEWED") return "Reviewed";
   if (u === "ACCEPTED") return "Accepted";
@@ -20,90 +20,78 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: true, data: [] });
     }
 
-    const gigs = await prisma.gigs.findMany({
-      where: { company_id: companyId },
-      orderBy: { created_at: "desc" },
-      include: {
-        gig_applications: {
-          orderBy: { created_at: "desc" },
-          include: {
-            users: {
-              select: {
-                id: true,
-                name: true,
-                skills: true,
-                specialization: true,
-                rating: true,
-                avatar_path: true,
-                github_url: true,
-                linkedin_url: true,
-                year: true,
-                bio: true,
+    let gigs: Awaited<ReturnType<typeof prisma.gigs.findMany>> = [];
+    try {
+      gigs = await prisma.gigs.findMany({
+        where: { company_id: companyId },
+        orderBy: { created_at: "desc" },
+        select: {
+          id: true,
+          title: true,
+          budget: true,
+          created_at: true,
+          gig_applications: {
+            select: {
+              id: true,
+              motivation: true,
+              resume_url: true,
+              status: true,
+              created_at: true,
+              users: {
+                select: {
+                  id: true,
+                  name: true,
+                  skills: true,
+                  bio: true,
+                  specialization: true,
+                  rating: true,
+                  github_url: true,
+                  linkedin_url: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
+    } catch (err) {
+      console.error("STARTUP_DASHBOARD_APPLICATIONS_QUERY_ERROR:", err);
+      return NextResponse.json({ success: true, data: [] });
+    }
 
-    const data = gigs.map((gig) => {
-      const budgetStr =
-        gig.budget != null && Number.isFinite(Number(gig.budget))
-          ? `LKR ${Number(gig.budget).toLocaleString("en-LK")}`
-          : "—";
-
-      const timeline = gig.created_at
-        ? new Date(gig.created_at).toLocaleDateString("en-LK", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })
-        : "—";
-
-      const applicants = gig.gig_applications.map((app) => {
+    const data = gigs.map((gig) => ({
+      id: gig.id,
+      title: gig.title,
+      budget: gig.budget != null ? gig.budget.toString() : "",
+      timeline: formatDate(gig.created_at),
+      applicants: gig.gig_applications.map((app) => {
         const u = app.users;
-        const displayName = u?.name?.trim() || "Student";
-        const skillsFromUser = u?.skills?.length ? u.skills : (gig.requirements ?? []).slice(0, 6);
-        const ratingVal = u?.rating != null ? Number(u.rating) : NaN;
-        const ratingOut = Number.isFinite(ratingVal) ? ratingVal : null;
+        const name = u?.name?.trim() || "Applicant";
+        const initial = name.charAt(0).toUpperCase() || "?";
+        const ratingNum =
+          u?.rating != null && u.rating !== undefined ? Number(u.rating.toString()) : null;
 
         return {
           id: app.id,
-          name: displayName,
+          name,
           date: formatDate(app.created_at),
-          status: displayStatus(app.status),
-          rawStatus: app.status.toUpperCase(),
-          image: displayName.charAt(0).toUpperCase(),
-          skills: skillsFromUser.slice(0, 8),
-          experience:
-            u?.year != null
-              ? `Year ${u.year}`
-              : (() => {
-                  const b = u?.bio?.trim() ?? "";
-                  if (!b) return "—";
-                  return b.slice(0, 48) + (b.length > 48 ? "…" : "");
-                })(),
-          rating: ratingOut,
-          portfolio: app.resume_url,
-          motivation: app.motivation,
-          githubUrl: u?.github_url ?? "",
-          linkedinUrl: u?.linkedin_url ?? "",
-          userId: app.user_id,
+          status: humanizeStatus(app.status),
+          rawStatus: app.status,
+          image: initial,
+          skills: u?.skills ?? [],
+          experience: (u?.bio || u?.specialization || "—").trim() || "—",
+          rating: Number.isFinite(ratingNum) ? ratingNum : null,
+          portfolio: app.resume_url?.trim() ? app.resume_url.trim() : "",
+          motivation: app.motivation ?? "",
+          githubUrl: u?.github_url?.trim() ?? "",
+          linkedinUrl: u?.linkedin_url?.trim() ?? "",
+          userId: u?.id ?? "",
         };
-      });
-
-      return {
-        id: gig.id,
-        title: gig.title,
-        budget: budgetStr,
-        timeline,
-        applicants,
-      };
-    });
+      }),
+    }));
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
-    console.error("DASHBOARD_APPLICATIONS_GET_ERROR:", error);
+    console.error("STARTUP_DASHBOARD_APPLICATIONS_GET_ERROR:", error);
     const message = error instanceof Error ? error.message : "Failed to load applications";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }

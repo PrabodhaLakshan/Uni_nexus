@@ -181,7 +181,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
         setLoadError(null);
 
         const token = getToken();
-        const res = await fetch("/api/startup/dashboard", {
+        const res = await fetch("/api/startup-connect/dashboard", {
           method: "GET",
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
@@ -267,7 +267,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
     const fetchTopMatches = async () => {
       try {
         const token = getToken();
-        const res = await fetch("/api/startup/dashboard/top-matches?minMatch=98", {
+        const res = await fetch("/api/startup-connect/dashboard/top-matches?minMatch=98", {
           method: "GET",
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
@@ -295,7 +295,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
       const url = URL.createObjectURL(startupProfile.logo);
       setLogoPreviewUrl(url);
 
-      // Memory leak අවොයිඩ් කරන්න cleanup
+      
       return () => URL.revokeObjectURL(url);
     }
 
@@ -357,7 +357,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
       });
 
       const token = getToken();
-      const res = await fetch("/api/startup/dashboard/profile", {
+      const res = await fetch("/api/startup-connect/dashboard/profile", {
         method: "PATCH",
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         body: formData,
@@ -419,7 +419,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
       }
 
       const token = getToken();
-      const res = await fetch("/api/startup/dashboard/recent-works", {
+      const res = await fetch("/api/startup-connect/dashboard/recent-works", {
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         body: formData,
@@ -452,7 +452,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
       }
 
       const token = getToken();
-      const res = await fetch(`/api/startup/dashboard/recent-works/${updatedWork.id}`, {
+      const res = await fetch(`/api/startup-connect/dashboard/recent-works/${updatedWork.id}`, {
         method: "PATCH",
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         body: formData,
@@ -477,7 +477,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
     if (!confirmed) return;
     try {
       const token = getToken();
-      const res = await fetch(`/api/startup/dashboard/recent-works/${workId}`, {
+      const res = await fetch(`/api/startup-connect/dashboard/recent-works/${workId}`, {
         method: "DELETE",
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
@@ -553,7 +553,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
   const displayIndustry = startupProfile.industry || "Technology";
 
   return (
-    <DashboardLayout contentClassName="space-y-10 bg-[#f8fafc]/50">
+    <DashboardLayout contentClassName="space-y-10 bg-gradient-to-b from-sky-50/90 via-white to-emerald-50/35">
       <PostGigModal
         isOpen={isModalOpen}
         onClose={() => {
@@ -564,7 +564,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
         onSubmitGig={handleSaveGig}
       />
 
-      <div className="max-w-7xl mx-auto space-y-10 px-4">
+      <div className="max-w-7xl mx-auto space-y-10 px-4 relative">
         {isManagingGigs ? (
           <>
             {/* --- MANAGE GIGS VIEW --- */}
@@ -594,7 +594,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
 
             <div className="mt-8 space-y-4">
               {gigs.length === 0 ? (
-                <Card className="p-8 rounded-[32px] bg-white border border-dashed border-slate-200 text-center">
+                <Card className="p-8 rounded-[32px] border border-dashed border-orange-200/80 bg-gradient-to-br from-orange-50/40 via-white to-sky-50/50 text-center shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8)] ring-1 ring-orange-100/50">
                   <p className="text-sm font-black text-slate-700 uppercase tracking-[0.25em]">
                     No gigs yet
                   </p>
@@ -607,7 +607,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
                   {gigs.map((gig) => (
                     <Card
                       key={gig.id}
-                      className="p-6 rounded-[28px] border border-slate-100 bg-white shadow-md flex flex-col gap-4 hover:shadow-lg transition-shadow"
+                      className="p-6 rounded-[28px] border border-sky-200/60 bg-gradient-to-br from-white via-sky-50/40 to-orange-50/30 shadow-[0_12px_40px_-12px_rgba(59,130,246,0.22)] ring-1 ring-sky-100/70 flex flex-col gap-4 hover:shadow-[0_18px_48px_-10px_rgba(59,130,246,0.28)] hover:ring-blue-200/60 transition-shadow"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -641,7 +641,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
                         </div>
                       </div>
 
-                      <p className="text-sm font-semibold text-slate-500 line-clamp-3">
+                      <p className="text-[14px] font-normal font-semibold text-slate-600 line-clamp-3">
                         {gig.description}
                       </p>
 
@@ -674,10 +674,11 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
           <>
 
         {/* --- WELCOME HEADER SECTION --- */}
-        <Card className="relative overflow-hidden p-8 md:p-12 border-none rounded-[40px] bg-white shadow-2xl shadow-blue-100/20">
+        <Card className="relative overflow-hidden p-8 md:p-12 border border-sky-200/50 rounded-[40px] bg-gradient-to-br from-white via-sky-50/60 to-orange-50/35 shadow-[0_24px_70px_-20px_rgba(37,99,235,0.22)] ring-1 ring-blue-100/40">
           {/* Decorative Background Blobs */}
-          <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-60" />
-          <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-orange-50 rounded-full blur-3xl opacity-60" />
+          <div className="absolute -top-24 -right-24 w-72 h-72 bg-sky-300/35 rounded-full blur-3xl opacity-90" />
+          <div className="absolute -bottom-28 -left-20 w-72 h-72 bg-orange-300/30 rounded-full blur-3xl opacity-90" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-200/20 rounded-full blur-3xl opacity-70 pointer-events-none" />
 
           <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div className="flex items-center gap-6">
@@ -734,7 +735,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
 
         {/* --- EDIT PROFILE (MANAGE) SECTION --- */}
         {isManageOpen && (
-          <Card className="p-8 border-2 border-dashed border-blue-200 bg-blue-50/30 rounded-[35px] animate-in slide-in-from-top duration-500">
+          <Card className="p-8 border-2 border-dashed border-sky-300/70 bg-gradient-to-br from-sky-50/90 via-white to-emerald-50/40 rounded-[35px] animate-in slide-in-from-top duration-500 shadow-[0_16px_50px_-18px_rgba(14,165,233,0.2)] ring-1 ring-sky-100/50">
             <div className="flex items-center gap-3 mb-8">
                 <div className="w-2 h-8 bg-blue-700 rounded-full" />
                 <h3 className="text-lg font-black uppercase text-slate-800 tracking-tight">Refine Your Identity</h3>
@@ -817,21 +818,21 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
 
         {/* --- VISION & ASSETS GRID --- */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <Card className="p-10 border-none rounded-[35px] bg-white shadow-xl shadow-slate-200/50 lg:col-span-7 flex flex-col justify-center relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-700" />
+          <Card className="p-10 border border-sky-200/50 rounded-[35px] bg-gradient-to-br from-white via-blue-50/40 to-emerald-50/30 shadow-[0_18px_50px_-12px_rgba(37,99,235,0.18)] ring-1 ring-blue-100/50 lg:col-span-7 flex flex-col justify-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-blue-600 via-sky-500 to-emerald-500" />
             <h3 className="text-[11px] font-black uppercase text-blue-700 tracking-[0.3em] mb-6 flex items-center gap-2">
                 <span className="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-blue-700" /></span>
                 Company Vision
             </h3>
-            <p className="text-xl md:text-2xl font-bold text-slate-700 leading-relaxed">
+            <p className="text-[12px] font-normal text-slate-600 leading-relaxed">
               "{startupProfile.about || "Empowering the next generation of campus innovators through meaningful opportunities."}"
             </p>
           </Card>
 
-          <Card className="p-8 border-none rounded-[35px] bg-white shadow-xl shadow-slate-200/50 lg:col-span-5">
+          <Card className="p-8 border border-orange-100/60 rounded-[35px] bg-gradient-to-br from-orange-50/50 via-white to-amber-50/40 shadow-[0_18px_50px_-12px_rgba(234,88,12,0.15)] ring-1 ring-orange-100/40 lg:col-span-5">
             <h3 className="text-[11px] font-black uppercase text-orange-600 tracking-[0.3em] mb-6">Verification Assets</h3>
             <div className="space-y-6">
-              <div className="group relative rounded-3xl overflow-hidden bg-slate-50 border-2 border-slate-100 p-3 hover:border-orange-200 transition-colors">
+              <div className="group relative rounded-3xl overflow-hidden bg-gradient-to-br from-white to-orange-50/50 border-2 border-orange-100/80 p-3 hover:border-orange-300/80 hover:shadow-[0_12px_36px_-8px_rgba(234,88,12,0.2)] transition-all">
                 <div className="h-40 rounded-2xl overflow-hidden bg-white flex items-center justify-center">
                   {certificatePreviewUrl ? (
                     <img
@@ -874,8 +875,8 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
                       ? item.split("/").pop() || "Certificate"
                       : "Certificate";
                     return (
-                      <div key={idx} className="flex items-center gap-3 text-xs font-bold text-slate-600 bg-slate-50 px-4 py-3 rounded-2xl border border-slate-100">
-                        <div className="w-2 h-2 rounded-full bg-blue-400" /> {label}
+                      <div key={idx} className="flex items-center gap-3 text-xs font-bold text-slate-600 bg-gradient-to-r from-sky-50 to-emerald-50/60 px-4 py-3 rounded-2xl border border-sky-100/80 shadow-sm">
+                        <div className="w-2 h-2 rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 shadow-sm" /> {label}
                       </div>
                     );
                   })}
@@ -900,14 +901,14 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {recentWorks.map((work) => (
-              <Card key={work.id} className="group overflow-hidden rounded-[24px] border-none bg-white shadow-md shadow-slate-200/60 hover:shadow-xl hover:shadow-blue-200/40 transition-all duration-300 border-b-4 border-blue-700">
+              <Card key={work.id} className="group overflow-hidden rounded-[24px] border border-sky-100/70 bg-gradient-to-b from-white via-sky-50/25 to-emerald-50/15 shadow-[0_14px_40px_-12px_rgba(59,130,246,0.2)] hover:shadow-[0_20px_50px_-10px_rgba(16,185,129,0.18)] transition-all duration-300 border-b-4 border-b-orange-500 ring-1 ring-sky-100/50">
                 <div className="relative h-32 sm:h-36 overflow-hidden">
                   <img src={work.images[0]} alt={work.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                   <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-black text-blue-700 shadow-sm uppercase">{work.date}</div>
                 </div>
                 <div className="p-4 sm:p-5">
                   <h3 className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-tight line-clamp-2">{work.title}</h3>
-                  <p className="text-slate-500 font-bold text-xs mt-2 leading-relaxed line-clamp-3">{work.description}</p>
+                  <p className="text-[12px] font-normal text-slate-600 mt-2 leading-relaxed line-clamp-3">{work.description}</p>
                   <div className="flex gap-2 mt-4">
                     <Button variant="outline" className="flex-1 rounded-2xl border-slate-200 font-black text-[9px] uppercase h-9 hover:bg-slate-50" onClick={() => work.github && window.open(work.github, "_blank")}>
                       <Github size={16} className="mr-2" /> Repository
@@ -976,7 +977,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
               const matchColor = matchPercentage >= 95 ? "#10b981" : matchPercentage >= 90 ? "#3b82f6" : "#f59e0b";
 
               return (
-                <Card key={student.name} className="group p-8 border-none rounded-[35px] bg-white shadow-xl shadow-slate-200/40 hover:-translate-y-2 transition-all duration-300">
+                <Card key={student.name} className="group p-8 border border-emerald-100/60 rounded-[35px] bg-gradient-to-br from-white via-emerald-50/30 to-sky-50/40 shadow-[0_18px_50px_-14px_rgba(16,185,129,0.2)] ring-1 ring-emerald-100/50 hover:-translate-y-2 hover:shadow-[0_24px_60px_-12px_rgba(59,130,246,0.22)] transition-all duration-300">
                   <div className="flex flex-col items-center text-center mb-8">
                     <div className="relative w-32 h-32 mb-6">
                       <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
@@ -1015,7 +1016,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
                     </div>
                   </div>
 
-                  <Button onClick={() => handleContactTalent(student.name)} className="w-full bg-slate-900 hover:bg-blue-700 text-white rounded-2xl py-7 font-black text-[11px] uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-3">
+                  <Button onClick={() => handleContactTalent(student.name)} className="w-full bg-gradient-to-r from-blue-600 via-sky-600 to-emerald-600 hover:from-blue-700 hover:via-sky-700 hover:to-emerald-700 text-white rounded-2xl py-7 font-black text-[11px] uppercase tracking-widest transition-all shadow-[0_10px_30px_-6px_rgba(37,99,235,0.45)] flex items-center justify-center gap-3">
                     Inquire Now <ArrowUpRight size={18} />
                   </Button>
                 </Card>
@@ -1027,7 +1028,7 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
         {/* --- NOTIFICATION TOAST --- */}
         {notificationMessage && (
           <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-100 animate-in slide-in-from-bottom-10 duration-500">
-            <div className="bg-green-600 text-white px-10 py-5 rounded-4xl font-black text-xs uppercase tracking-widest shadow-2xl flex items-center gap-3">
+            <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-sky-500 text-white px-10 py-5 rounded-4xl font-black text-xs uppercase tracking-widest shadow-[0_12px_40px_-8px_rgba(16,185,129,0.5)] ring-2 ring-white/30 flex items-center gap-3">
               <ShieldCheck size={20} /> {notificationMessage}
             </div>
           </div>
@@ -1055,19 +1056,19 @@ const StatCard = ({
   onClick?: () => void;
 }) => {
     const tones = {
-        blue: "bg-blue-50 border-blue-100 text-blue-700 shadow-blue-100/50",
-        orange: "bg-orange-50 border-orange-100 text-orange-700 shadow-orange-100/50",
-        green: "bg-green-50 border-green-100 text-green-700 shadow-green-100/50",
+        blue: "bg-gradient-to-br from-sky-50 via-white to-blue-100/50 border border-sky-200/70 text-blue-800 shadow-[0_14px_45px_-10px_rgba(37,99,235,0.28)] ring-1 ring-sky-200/50",
+        orange: "bg-gradient-to-br from-orange-50 via-white to-amber-100/40 border border-orange-200/70 text-orange-800 shadow-[0_14px_45px_-10px_rgba(234,88,12,0.22)] ring-1 ring-orange-200/50",
+        green: "bg-gradient-to-br from-emerald-50 via-white to-green-100/40 border border-emerald-200/70 text-emerald-800 shadow-[0_14px_45px_-10px_rgba(16,185,129,0.22)] ring-1 ring-emerald-200/50",
     };
 
     return (
         <Card
-          className={`p-8 border-none rounded-[35px] shadow-xl transition-transform hover:scale-[1.02] duration-300 flex items-center gap-6 ${tones[tone]} ${onClick ? "cursor-pointer" : ""}`}
+          className={`p-8 rounded-[35px] transition-transform hover:scale-[1.02] duration-300 flex items-center gap-6 ${tones[tone]} ${onClick ? "cursor-pointer hover:brightness-[1.02]" : ""}`}
           role={onClick ? "button" : undefined}
           tabIndex={onClick ? 0 : undefined}
           onClick={onClick}
         >
-          <div className="p-4 rounded-4xl bg-white shadow-sm">{icon}</div>
+          <div className="p-4 rounded-4xl bg-white/90 backdrop-blur-sm shadow-inner ring-1 ring-white/60">{icon}</div>
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-1">{label}</p>
             <p className="text-4xl font-black text-slate-900 tracking-tighter">{value}</p>

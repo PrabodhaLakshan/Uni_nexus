@@ -41,7 +41,7 @@ const MyProjectsPage = () => {
         // Always derive recent works from the dashboard response.
         // This guarantees we use the connected founder's company_id via JWT
         // (and avoids 404 "No startup company found" UI errors).
-        const res = await fetch("/api/startup/dashboard", {
+        const res = await fetch("/api/startup-connect/dashboard", {
           method: "GET",
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
