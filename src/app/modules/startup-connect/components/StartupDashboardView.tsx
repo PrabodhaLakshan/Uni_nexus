@@ -10,16 +10,19 @@ import { PostGigModal, type GigFormValues } from "./PostGigModal";
 import { AddProjectModal } from "./AddProjectModal";
 import { DashboardLayout } from "./DashboardLayout";
 import { StartupProfile } from "../context/StartupProfileContext";
+import { getToken } from "@/lib/auth";
+import { COMPANY_UUID_RE } from "@/lib/companyUuid";
 
 type TalentItem = {
   name: string;
   role: string;
-  match: string;
+  match: number;
   skills: string[];
+  rating?: string;
 };
 
 type RecentWorkItem = {
-  id: number;
+  id: string | number;
   title: string;
   description: string;
   github?: string;
@@ -29,7 +32,7 @@ type RecentWorkItem = {
 };
 
 type Gig = {
-  id: number;
+  id: string;
   title: string;
   budget: string;
   deadline: string;
@@ -37,10 +40,9 @@ type Gig = {
   skills: string[];
 };
 
-const TALENT_ITEMS: TalentItem[] = [
-  { name: "Pasindu Perera", role: "Full-Stack Dev", match: "98%", skills: ["React", "Node.js"] },
-  { name: "Ishani Silva", role: "UI/UX Designer", match: "95%", skills: ["Figma", "Tailwind"] },
-  { name: "Kavindu Gunawardena", role: "App Developer", match: "95%", skills: ["Flutter", "Firebase"] },
+// Fallback values (used only while API loads)
+const FALLBACK_TALENT_ITEMS: TalentItem[] = [
+  { name: "Loading...", role: "Student", match: 0, skills: [] },
 ];
 
 const INITIAL_RECENT_WORKS: RecentWorkItem[] = [
@@ -120,55 +122,205 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
   const [selectedGigForEdit, setSelectedGigForEdit] = useState<Gig | null>(null);
   
   const [startupProfile, setStartupProfile] = useState<StartupProfile>({
-    name: data?.name || "Startup",
-    industry: data?.industry || "Technology",
-    about: data?.about || "",
-    logo: data?.logo ?? null,
-    certificates: Array.isArray(data?.certificates) ? data.certificates : [],
+    name: "Startup",
+    industry: "Technology",
+    about: "",
+    logo: null,
+    certificates: [],
   });
 
   const [editForm, setEditForm] = useState<StartupProfile>(startupProfile);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
   const [recentWorks, setRecentWorks] = useState<RecentWorkItem[]>(INITIAL_RECENT_WORKS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [topMatches, setTopMatches] = useState<TalentItem[]>(FALLBACK_TALENT_ITEMS);
+  const [pendingApplicantsCount, setPendingApplicantsCount] = useState(0);
 
   const handleContactTalent = (talentName: string) => {
     setNotificationMessage(`Notification sent to ${talentName} successfully!`);
     setTimeout(() => setNotificationMessage(null), 3000);
   };
 
+  // Live "New Applicants" counter (polling, no WebSocket).
   useEffect(() => {
-    const nextData = {
-      name: data?.name || "Startup",
-      industry: data?.industry || "Technology",
-      about: data?.about || "",
-      logo: data?.logo ?? null,
-      certificates: Array.isArray(data?.certificates) ? data.certificates : [],
+    const load = async () => {
+      const token = getToken();
+      if (!token) {
+        setPendingApplicantsCount(0);
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/startup-connect/dashboard/applications-summary", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const json = (await res.json().catch(() => ({}))) as {
+          success?: boolean;
+          data?: { pending?: unknown };
+        };
+
+        if (res.ok && json.success && json.data && typeof json.data.pending === "number") {
+          setPendingApplicantsCount(json.data.pending);
+        }
+      } catch {
+        // keep last known count
+      }
     };
-    setStartupProfile(nextData);
-    setEditForm(nextData);
-  }, [data]);
+
+    void load();
+    const id = setInterval(() => void load(), 25_000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Fetch profile, gigs, and recent works from backend on load
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        setIsLoading(true);
+        setLoadError(null);
+
+        const token = getToken();
+        const res = await fetch("/api/startup/dashboard", {
+          method: "GET",
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        if (!res.ok) {
+          throw new Error("Failed to load dashboard data");
+        }
+
+        const json = await res.json();
+        const payload = json.data ?? json;
+
+        const profileSource = payload.profile;
+
+        if (
+          !profileSource ||
+          typeof profileSource !== "object" ||
+          typeof (profileSource as { id?: unknown }).id !== "string" ||
+          !(profileSource as { id: string }).id
+        ) {
+          try {
+            const stored = localStorage.getItem("companyId");
+            if (stored && !COMPANY_UUID_RE.test(stored.trim())) {
+              localStorage.removeItem("companyId");
+            }
+          } catch {
+            /* ignore */
+          }
+          setStartupProfile({
+            name: "Startup",
+            industry: "Technology",
+            about: "",
+            logo: null,
+            certificates: [],
+          });
+          setEditForm({
+            name: "Startup",
+            industry: "Technology",
+            about: "",
+            logo: null,
+            certificates: [],
+          });
+          setGigs([]);
+          setRecentWorks([]);
+          return;
+        }
+
+        const nextProfile: StartupProfile = {
+          name: profileSource.name || "Startup",
+          industry: profileSource.industry || "Technology",
+          about: profileSource.about || "",
+          logo: profileSource.logoUrl ?? null,
+          certificates: Array.isArray(profileSource.certificateUrls)
+            ? profileSource.certificateUrls
+            : [],
+        };
+
+        setStartupProfile(nextProfile);
+        setEditForm(nextProfile);
+
+        const cid = profileSource.id;
+        if (typeof cid === "string" && cid && COMPANY_UUID_RE.test(cid)) {
+          localStorage.setItem("companyId", cid);
+        }
+
+        if (Array.isArray(payload.gigs)) {
+          setGigs(payload.gigs as Gig[]);
+        }
+
+        if (Array.isArray(payload.recentWorks)) {
+          setRecentWorks(payload.recentWorks as RecentWorkItem[]);
+        }
+      } catch (err: any) {
+        console.error("Error loading dashboard", err);
+        setLoadError(err.message || "Failed to load dashboard");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboard();
+  }, []);
 
   useEffect(() => {
+    const fetchTopMatches = async () => {
+      try {
+        const token = getToken();
+        const res = await fetch("/api/startup/dashboard/top-matches?minMatch=98", {
+          method: "GET",
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        if (!res.ok) return;
+        const json = await res.json();
+        const payload = json.data ?? json;
+        if (Array.isArray(payload)) setTopMatches(payload as TalentItem[]);
+      } catch (err) {
+        console.error("Error loading top matches", err);
+      }
+    };
+
+    fetchTopMatches();
+  }, []);
+
+  useEffect(() => {
+    
     if (!startupProfile.logo) {
       setLogoPreviewUrl(null);
       return;
     }
-    const url = URL.createObjectURL(startupProfile.logo);
-    setLogoPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
+
+    // 2. Logo එක File object එකක් නම් (upload කරපු වෙලාවේ)
+    if (startupProfile.logo instanceof File) {
+      const url = URL.createObjectURL(startupProfile.logo);
+      setLogoPreviewUrl(url);
+
+      // Memory leak අවොයිඩ් කරන්න cleanup
+      return () => URL.revokeObjectURL(url);
+    }
+
+    // 3. Logo එක string URL එකක් නම් (DB එකෙන්)
+    if (typeof startupProfile.logo === "string") {
+      setLogoPreviewUrl(startupProfile.logo);
+    }
   }, [startupProfile.logo]);
 
   useEffect(() => {
-    const files = Array.isArray(startupProfile.certificates) ? startupProfile.certificates : [];
+    const items = Array.isArray(startupProfile.certificates) ? startupProfile.certificates : [];
 
     let objectUrl: string | null = null;
 
-    if (files.length > 0) {
-      const first = files[0];
+    if (items.length > 0) {
+      const first = items[0];
 
       if (first instanceof File && first.type && first.type.startsWith("image/")) {
         objectUrl = URL.createObjectURL(first);
         setCertificatePreviewUrl(objectUrl);
+        setCertificateImageFailed(false);
+        setCertificateSrcIndex(0);
+      } else if (typeof first === "string") {
+        
+        setCertificatePreviewUrl(first);
         setCertificateImageFailed(false);
         setCertificateSrcIndex(0);
       } else {
@@ -185,9 +337,57 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
     };
   }, [startupProfile.certificates]);
 
-  const handleSaveProfile = () => {
-    setStartupProfile(editForm);
-    setIsManageOpen(false);
+  const handleSaveProfile = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("name", editForm.name);
+      formData.append("industry", editForm.industry);
+      formData.append("about", editForm.about);
+
+      // If user selected a new logo file, send it; otherwise backend keeps existing URL
+      if (editForm.logo instanceof File) {
+        formData.append("logo", editForm.logo);
+      }
+
+      // Send only newly added certificate Files; existing URL strings are already in DB
+      editForm.certificates.forEach((item) => {
+        if (item instanceof File) {
+          formData.append("certificates", item);
+        }
+      });
+
+      const token = getToken();
+      const res = await fetch("/api/startup/dashboard/profile", {
+        method: "PATCH",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error((errJson as { error?: string }).error || "Failed to save profile");
+      }
+
+      const json = await res.json();
+      const updated = (json.data ?? json).profile ?? {};
+
+      const nextProfile: StartupProfile = {
+        name: updated.name || editForm.name,
+        industry: updated.industry || editForm.industry,
+        about: updated.about || editForm.about,
+        logo: updated.logoUrl ?? editForm.logo ?? null,
+        certificates: Array.isArray(updated.certificateUrls)
+          ? updated.certificateUrls
+          : editForm.certificates,
+      };
+
+      setStartupProfile(nextProfile);
+      setEditForm(nextProfile);
+      setIsManageOpen(false);
+    } catch (err: any) {
+      console.error("Error saving profile", err);
+      alert(err.message || "Failed to save profile");
+    }
   };
 
   const handleCancelManage = () => {
@@ -205,46 +405,147 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
     setEditForm((prev) => ({ ...prev, certificates: files }));
   };
 
-  const handleAddRecentWork = (newWork: RecentWorkItem) => {
-    setRecentWorks((prev) => [newWork, ...prev]);
+  const handleAddRecentWork = async (newWork: any) => {
+    try {
+      const formData = new FormData();
+      formData.append("title", newWork.title);
+      formData.append("description", newWork.description);
+      formData.append("demo", newWork.demo || "");
+      formData.append("github", newWork.github || "");
+      if (Array.isArray(newWork.imageFiles)) {
+        newWork.imageFiles.forEach((file: File) => {
+          formData.append("images", file);
+        });
+      }
+
+      const token = getToken();
+      const res = await fetch("/api/startup/dashboard/recent-works", {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: formData,
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error((json as { error?: string }).error || "Failed to add recent work");
+      }
+
+      const created: RecentWorkItem = (json as { data?: RecentWorkItem }).data ?? (json as RecentWorkItem);
+      setRecentWorks((prev) => [created, ...prev]);
+    } catch (err: any) {
+      console.error("Error adding recent work", err);
+      alert(err.message || "Failed to add recent work");
+    }
+  };
+
+  const handleEditRecentWork = async (updatedWork: any) => {
+    try {
+      const formData = new FormData();
+      formData.append("title", updatedWork.title);
+      formData.append("description", updatedWork.description);
+      formData.append("demo", updatedWork.demo || "");
+      formData.append("github", updatedWork.github || "");
+      if (Array.isArray(updatedWork.imageFiles)) {
+        updatedWork.imageFiles.forEach((file: File) => {
+          formData.append("images", file);
+        });
+      }
+
+      const token = getToken();
+      const res = await fetch(`/api/startup/dashboard/recent-works/${updatedWork.id}`, {
+        method: "PATCH",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: formData,
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error((json as { error?: string }).error || "Failed to update recent work");
+      }
+
+      const next: RecentWorkItem = (json as { data?: RecentWorkItem }).data ?? (json as RecentWorkItem);
+      setRecentWorks((prev) => prev.map((work) => (work.id === updatedWork.id ? next : work)));
+    } catch (err: any) {
+      console.error("Error updating recent work", err);
+      alert(err.message || "Failed to update recent work");
+      throw err;
+    }
+  };
+
+  const handleDeleteRecentWork = async (workId: string | number) => {
+    const confirmed = window.confirm("Are you sure you want to delete this project?");
+    if (!confirmed) return;
+    try {
+      const token = getToken();
+      const res = await fetch(`/api/startup/dashboard/recent-works/${workId}`, {
+        method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error((errJson as { error?: string }).error || "Failed to delete recent work");
+      }
+      setRecentWorks((prev) => prev.filter((work) => work.id !== workId));
+    } catch (err: any) {
+      console.error("Error deleting recent work", err);
+      alert(err.message || "Failed to delete recent work");
+    }
   };
 
   const handleSaveGig = (gig: GigFormValues) => {
     setGigs((prev) => {
-      if (gig.id != null) {
-        return prev.map((existing) =>
-          existing.id === gig.id
-            ? {
-                id: gig.id!,
-                title: gig.title,
-                budget: gig.budget,
-                deadline: gig.deadline,
-                description: gig.description,
-                skills: gig.skills,
-              }
-            : existing
-        );
+      // If this gig has an ID and already exists in the list, update it
+      if (gig.id) {
+        const exists = prev.some((existing) => existing.id === gig.id);
+        if (exists) {
+          return prev.map((existing) =>
+            existing.id === gig.id
+              ? {
+                  id: gig.id!,
+                  title: gig.title,
+                  budget: gig.budget,
+                  deadline: gig.deadline,
+                  description: gig.description,
+                  skills: gig.skills,
+                }
+              : existing
+          );
+        }
       }
 
-      const nextId = prev.length ? Math.max(...prev.map((g) => g.id)) + 1 : 1;
-      return [
-        {
-          id: nextId,
-          title: gig.title,
-          budget: gig.budget,
-          deadline: gig.deadline,
-          description: gig.description,
-          skills: gig.skills,
-        },
-        ...prev,
-      ];
+      // Otherwise, treat as a new gig and prepend it
+      const newId = gig.id ?? Date.now().toString();
+      const newGig: Gig = {
+        id: newId,
+        title: gig.title,
+        budget: gig.budget,
+        deadline: gig.deadline,
+        description: gig.description,
+        skills: gig.skills,
+      };
+
+      return [newGig, ...prev];
     });
   };
 
-  const handleDeleteGig = (id: number) => {
+  const handleDeleteGig = async (id: string) => {
     const confirmed = window.confirm("Are you sure you want to delete this gig?");
     if (!confirmed) return;
-    setGigs((prev) => prev.filter((gig) => gig.id !== id));
+    const token = getToken();
+    try {
+      const res = await fetch(`/api/startup-connect/gigs/${id}`, {
+        method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) {
+        window.alert((json as { error?: string }).error || "Could not delete gig.");
+        return;
+      }
+      setGigs((prev) => prev.filter((gig) => gig.id !== id));
+    } catch {
+      window.alert("Could not delete gig.");
+    }
   };
 
   const certificates = Array.isArray(startupProfile.certificates) ? startupProfile.certificates : [];
@@ -351,7 +652,16 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
                         </div>
                         <div className="flex items-center gap-1">
                           <CalendarIcon size={14} className="text-orange-500" />
-                          <span>{gig.deadline}</span>
+                          <span>
+                            <span className="text-[10px] font-black uppercase text-slate-400 mr-1">
+                              Expected
+                            </span>
+                            {gig.deadline?.trim() ? (
+                              gig.deadline
+                            ) : (
+                              <span className="text-slate-400 font-semibold normal-case">Not set</span>
+                            )}
+                          </span>
                         </div>
                       </div>
                     </Card>
@@ -496,7 +806,12 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
             icon={<Briefcase size={22} />}
             onClick={() => setIsManagingGigs(true)}
           />
-          <StatCard label="New Applicants" value="28" tone="orange" icon={<Users size={22} />} />
+          <StatCard
+            label="New Applicants"
+            value={String(pendingApplicantsCount).padStart(2, "0")}
+            tone="orange"
+            icon={<Users size={22} />}
+          />
           <StatCard label="Talent Reach" value="1.2k" tone="green" icon={<Zap size={22} />} />
         </div>
 
@@ -552,11 +867,18 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
 
               {certificates.length > 0 && (
                 <div className="space-y-2">
-                  {certificates.map((file: File, idx) => (
-                    <div key={idx} className="flex items-center gap-3 text-xs font-bold text-slate-600 bg-slate-50 px-4 py-3 rounded-2xl border border-slate-100">
-                      <div className="w-2 h-2 rounded-full bg-blue-400" /> {file.name}
-                    </div>
-                  ))}
+                  {certificates.map((item, idx) => {
+                    const label = item instanceof File
+                      ? item.name
+                      : typeof item === "string"
+                      ? item.split("/").pop() || "Certificate"
+                      : "Certificate";
+                    return (
+                      <div key={idx} className="flex items-center gap-3 text-xs font-bold text-slate-600 bg-slate-50 px-4 py-3 rounded-2xl border border-slate-100">
+                        <div className="w-2 h-2 rounded-full bg-blue-400" /> {label}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -594,6 +916,32 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
                       View Project <ExternalLink size={16} className="ml-2" />
                     </Button>
                   </div>
+                  <div className="flex gap-2 mt-2">
+                    <AddProjectModal
+                      initialProject={work}
+                      onAddProject={handleEditRecentWork}
+                      submitLabel="Update Project"
+                      trigger={
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex-1 rounded-2xl border-blue-200 text-blue-700 font-black text-[9px] uppercase h-9 hover:bg-blue-50"
+                        >
+                          <Pen size={14} className="mr-2" />
+                          Edit
+                        </Button>
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1 rounded-2xl border-red-200 text-red-600 font-black text-[9px] uppercase h-9 hover:bg-red-50"
+                      onClick={() => handleDeleteRecentWork(work.id)}
+                    >
+                      <Trash2 size={14} className="mr-2" />
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}
@@ -620,8 +968,8 @@ export const StartupDashboardView = ({ data }: { data: any }) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {TALENT_ITEMS.map((student) => {
-              const matchPercentage = parseInt(student.match);
+            {(Array.isArray(topMatches) && topMatches.length > 0 ? topMatches : FALLBACK_TALENT_ITEMS).map((student) => {
+              const matchPercentage = Number(student.match) || 0;
               const circumference = 2 * Math.PI * 45;
               const strokeDashoffset = circumference - (matchPercentage / 100) * circumference;
               

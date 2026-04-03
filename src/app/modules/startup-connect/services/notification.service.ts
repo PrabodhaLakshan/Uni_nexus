@@ -11,45 +11,10 @@ export interface AppNotification {
   meta?: unknown;
 }
 
-function getDummyStartupNotifications(): { notifications: AppNotification[]; unreadCount: number } {
-  const notifications: AppNotification[] = [
-    {
-      id: "dummy-app-1",
-      title: "New Job Application",
-      message: "Nimal Siriwardana applied for your gig: Java Spring Boot API Development.",
-      time: new Date(Date.now() - 5 * 60 * 1000),
-      read: false,
-      type: "application",
-      senderId: "student-1",
-      meta: { gigTitle: "Java Spring Boot API Development", applicantName: "Nimal Siriwardana" },
-    },
-    {
-      id: "dummy-app-2",
-      title: "New Job Application",
-      message: "Ishani Silva applied for your gig: Mobile App UI Revamp.",
-      time: new Date(Date.now() - 45 * 60 * 1000),
-      read: false,
-      type: "application",
-      senderId: "student-2",
-      meta: { gigTitle: "Mobile App UI Revamp", applicantName: "Ishani Silva" },
-    },
-    {
-      id: "dummy-app-3",
-      title: "Application Status",
-      message: "Kavindu Gunawardena is awaiting your response for Campus Collaboration Gig.",
-      time: new Date(Date.now() - 3 * 60 * 60 * 1000),
-      read: true,
-      type: "application",
-      senderId: "student-3",
-      meta: { gigTitle: "Campus Collaboration Gig", applicantName: "Kavindu Gunawardena" },
-    },
-  ];
-
-  return {
-    notifications,
-    unreadCount: notifications.filter((item) => !item.read).length,
-  };
-}
+const EMPTY_STATE: { notifications: AppNotification[]; unreadCount: number } = {
+  notifications: [],
+  unreadCount: 0,
+};
 
 function getAuthHeaders(): Record<string, string> {
   const token = getToken();
@@ -75,18 +40,23 @@ export async function fetchNotifications(userId?: string) {
     });
 
     if (!response.ok) {
-      return getDummyStartupNotifications();
+      return EMPTY_STATE;
     }
 
-    const data = (await response.json()) as { notifications: AppNotification[]; unreadCount: number };
+    const data = (await response.json()) as {
+      notifications?: AppNotification[];
+      unreadCount?: number;
+    };
 
-    if (!data?.notifications?.length) {
-      return getDummyStartupNotifications();
-    }
+    const notifications = Array.isArray(data?.notifications) ? data.notifications : [];
+    const unreadCount =
+      typeof data?.unreadCount === "number"
+        ? data.unreadCount
+        : notifications.filter((item) => !item.read).length;
 
-    return data;
+    return { notifications, unreadCount };
   } catch {
-    return getDummyStartupNotifications();
+    return EMPTY_STATE;
   }
 }
 
