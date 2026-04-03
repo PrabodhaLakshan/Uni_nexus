@@ -318,8 +318,18 @@ const STOP_WORDS = new Set([
   "the", "and", "for", "with", "from", "your", "this", "that", "new", "used", "sale", "item",
 ]);
 
-function formatPrice(value: number) {
-  return `Rs. ${value.toLocaleString()}`;
+function formatPrice(value: number | string) {
+  const numericValue =
+    typeof value === "number"
+      ? value
+      : Number(String(value).replace(/[^0-9.-]/g, ""));
+
+  return Number.isFinite(numericValue)
+    ? `Rs. ${numericValue.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`
+    : "Rs. 0.00";
 }
 
 function normalizeCategory(category?: string) {
@@ -676,7 +686,7 @@ return (
                         {item.badge}
                       </span>
                       <p className="text-sm font-bold text-slate-800 leading-tight mt-1">{item.title}</p>
-                      <p className={`${oxanium.className} text-slate-900 font-black mt-2 text-lg`}>{item.price}</p>
+                      <p className={`${oxanium.className} text-slate-900 font-black mt-2 text-lg`}>{formatPrice(item.price)}</p>
                     </motion.div>
                   );
                 })}
