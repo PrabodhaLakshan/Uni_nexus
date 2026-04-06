@@ -19,15 +19,14 @@ export async function GET(req: NextRequest) {
                 id: { not: currentUser.id }, // Rule 1: Cannot invite yourself
                 year: year ? parseInt(year) : undefined,
                 semester: semester ? parseInt(semester) : undefined,
+                group_number: batch || undefined,
                 specialization: specialization || undefined,
+                project_group_members: {
+                    is: null,
+                },
             },
             include: {
                 user_skills: true,
-                project_group_members: {
-                    include: {
-                        project_group: true
-                    }
-                },
                 project_group_invites_project_group_invites_receiver_idTousers: {
                     where: {
                         sender_id: currentUser.id,
@@ -65,7 +64,6 @@ export async function GET(req: NextRequest) {
             }
 
             const typedStudent = student as any;
-            const isInGroup = (typedStudent.project_group_members?.length || 0) > 0;
             const hasPendingInvite = typedStudent.project_group_invites_project_group_invites_receiver_idTousers.length > 0;
 
             return {
@@ -80,7 +78,7 @@ export async function GET(req: NextRequest) {
                 skills,
                 matchedSkills,
                 matchScore: Math.min(matchScore, 100),
-                isInGroup,
+                isInGroup: false,
                 hasPendingInvite
             };
         });
