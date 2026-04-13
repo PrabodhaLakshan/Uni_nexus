@@ -1,3 +1,550 @@
+// "use client";
+
+// import { useEffect, useRef, useState } from "react";
+// import { useRouter } from "next/navigation";
+// import { createProduct } from "../services/product.service";
+// import { productSchema } from "../validations";
+// import { ZodError } from "zod";
+// import { Upload, X, ArrowLeft, ChevronDown, Check } from "lucide-react";
+// import { Oxanium, Inter } from "next/font/google";
+
+// const oxanium = Oxanium({
+//   subsets: ["latin"],
+//   weight: ["500", "600", "700"],
+// });
+
+// const inter = Inter({
+//   subsets: ["latin"],
+//   weight: ["400", "500", "600"],
+// });
+
+// const CATEGORIES = [
+//   "Electronics",
+//   "Books",
+//   "Clothing",
+//   "Furniture",
+//   "Sports",
+//   "Notes & Study Materials",
+//   "Laptops & Accessories",
+//   "Phones & Tablets",
+//   "Other",
+// ];
+
+// const CONDITIONS = ["new", "used", "refurbished"];
+
+// const CAMPUS_LOCATIONS = [
+//   "SLIIT UNI - Malabe",
+//   "SLIIT Metro - Colombo 03",
+//   "SLIIT Matara Center - Matara",
+//   "SLIIT Kandy UNI - Kandy",
+//   "SLIIT Kurunegala Center - Kurunegala",
+//   "SLIIT Jaffna Center - Jaffna",
+// ];
+
+// type SelectOption = {
+//   value: string;
+//   label: string;
+// };
+
+// type ModernSelectProps = {
+//   name: string;
+//   value: string;
+//   onChange: (nextValue: string) => void;
+//   placeholder: string;
+//   options: SelectOption[];
+// };
+
+// function ModernSelect({ name, value, onChange, placeholder, options }: ModernSelectProps) {
+//   const [isOpen, setIsOpen] = useState(false);
+//   const containerRef = useRef<HTMLDivElement | null>(null);
+
+//   useEffect(() => {
+//     const handleClickOutside = (event: MouseEvent) => {
+//       if (!containerRef.current?.contains(event.target as Node)) {
+//         setIsOpen(false);
+//       }
+//     };
+
+//     const handleEscape = (event: KeyboardEvent) => {
+//       if (event.key === "Escape") {
+//         setIsOpen(false);
+//       }
+//     };
+
+//     document.addEventListener("mousedown", handleClickOutside);
+//     document.addEventListener("keydown", handleEscape);
+
+//     return () => {
+//       document.removeEventListener("mousedown", handleClickOutside);
+//       document.removeEventListener("keydown", handleEscape);
+//     };
+//   }, []);
+
+//   const selectedOption = options.find((option) => option.value === value);
+
+//   return (
+//     <div ref={containerRef} className="relative">
+//       <input type="hidden" name={name} value={value} />
+//       <button
+//         type="button"
+//         onClick={() => setIsOpen((prev) => !prev)}
+//         className="w-full rounded-xl border border-slate-200/80 bg-white/85 px-4 py-2.5 pr-11 text-left shadow-sm backdrop-blur-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/80 focus:border-blue-400"
+//       >
+//         <span className={value ? "text-slate-900" : "text-slate-500"}>
+//           {selectedOption ? selectedOption.label : placeholder}
+//         </span>
+//         <ChevronDown
+//           size={18}
+//           className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+//         />
+//       </button>
+
+//       {isOpen && (
+//         <div className="absolute z-30 mt-2 max-h-64 w-full overflow-auto rounded-xl border border-slate-200 bg-white/95 p-1.5 shadow-[0_16px_40px_rgba(15,23,42,0.18)] backdrop-blur-md">
+//           {options.map((option) => {
+//             const isSelected = option.value === value;
+//             return (
+//               <button
+//                 key={option.value}
+//                 type="button"
+//                 onClick={() => {
+//                   onChange(option.value);
+//                   setIsOpen(false);
+//                 }}
+//                 className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+//                   isSelected
+//                     ? "bg-blue-50 text-blue-700"
+//                     : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+//                 }`}
+//               >
+//                 <span>{option.label}</span>
+//                 {isSelected && <Check size={16} className="text-blue-600" />}
+//               </button>
+//             );
+//           })}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
+// export default function PostItemPage() {
+//   const router = useRouter();
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [errors, setErrors] = useState<Record<string, string>>({});
+//   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+//   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+
+//   const [formData, setFormData] = useState({
+//     title: "",
+//     description: "",
+//     price: "",
+//     category: "",
+//     condition: "used" as "new" | "used" | "refurbished",
+//     location: "",
+//     images: [] as string[],
+//   });
+
+//   const handleInputChange = (
+//     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+//   ) => {
+//     const { name, value } = e.target;
+//     setFormData((prev) => ({
+//       ...prev,
+//       [name]: name === "price" ? (value ? parseFloat(value) : "") : value,
+//     }));
+//     // Clear error for this field
+//     if (errors[name]) {
+//       setErrors((prev) => {
+//         const newErrors = { ...prev };
+//         delete newErrors[name];
+//         return newErrors;
+//       });
+//     }
+//   };
+
+//   const handleSelectChange = (
+//     name: "category" | "condition" | "location",
+//     value: string
+//   ) => {
+//     setFormData((prev) => ({
+//       ...prev,
+//       [name]: name === "condition" ? (value as "new" | "used" | "refurbished") : value,
+//     }));
+
+//     if (errors[name]) {
+//       setErrors((prev) => {
+//         const newErrors = { ...prev };
+//         delete newErrors[name];
+//         return newErrors;
+//       });
+//     }
+//   };
+
+//   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+//     const files = e.target.files;
+//     if (!files) return;
+
+//     // In a real app, you'd upload to a server/storage service
+//     // For now, we'll create data URLs
+//     for (let i = 0; i < Math.min(files.length, 5); i++) {
+//       const file = files[i];
+//       const reader = new FileReader();
+//       reader.onload = (event) => {
+//         const imageUrl = event.target?.result as string;
+//         setUploadedImages((prev) => [...prev, imageUrl]);
+//         setFormData((prev) => ({
+//           ...prev,
+//           images: [...prev.images, imageUrl],
+//         }));
+//       };
+//       reader.readAsDataURL(file);
+//     }
+//   };
+
+//   const removeImage = (index: number) => {
+//     setUploadedImages((prev) => prev.filter((_, i) => i !== index));
+//     setFormData((prev) => ({
+//       ...prev,
+//       images: prev.images.filter((_, i) => i !== index),
+//     }));
+//   };
+
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     setIsLoading(true);
+//     setErrors({});
+
+//     try {
+//       // Validate form data
+//       const validatedData = productSchema.parse({
+//         ...formData,
+//         price: typeof formData.price === "string" ? 0 : formData.price,
+//       });
+
+//       // Create product
+//       await createProduct(validatedData);
+
+//       // Success - redirect to products page
+//       router.push("/modules/uni-mart/my-items");
+//     } catch (error: unknown) {
+//       console.error("Product creation error:", error);
+//       if (error instanceof ZodError) {
+//         const newErrors: Record<string, string> = {};
+//         error.issues.forEach((err) => {
+//           const path = err.path[0] as string;
+//           newErrors[path] = err.message;
+//         });
+//         setErrors(newErrors);
+//       } else if (error instanceof Error) {
+//         // Show the actual error message from the API
+//         console.error("Error message:", error.message);
+//         setErrors({ submit: error.message || "Failed to create product. Please try again." });
+//       } else {
+//         console.error("Unknown error type:", typeof error, error);
+//         setErrors({ submit: "Failed to create product. Please try again." });
+//       }
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   };
+
+//   const formValidation = productSchema.safeParse({
+//     ...formData,
+//     price: typeof formData.price === "string" ? 0 : formData.price,
+//   });
+//   const isFormValid = formValidation.success;
+//   const stepOneValid =
+//     formData.title.trim().length >= 3 &&
+//     formData.description.trim().length >= 10 &&
+//     formData.category.trim().length > 0;
+//   const stepTwoValid =
+//     typeof formData.price !== "string" && formData.price > 0 && formData.images.length >= 1;
+//   const progressChecks = [
+//     formData.title.trim().length > 0,
+//     formData.description.trim().length > 0,
+//     formData.category.trim().length > 0,
+//     formData.location.trim().length > 0,
+//     typeof formData.price !== "string" && formData.price > 0,
+//     formData.images.length > 0,
+//   ];
+//   const progressValue = Math.round(
+//     (progressChecks.filter(Boolean).length / progressChecks.length) * 100
+//   );
+
+//   return (
+//     <div
+//       className={`${inter.className} relative -mx-[calc(50vw-50%)] -mt-12 min-h-screen overflow-x-hidden bg-cover bg-top bg-no-repeat`}
+//       style={{ backgroundImage: "url('/images/unimart/unimart_BG1.jpg')" }}
+//     >
+//       <div className="mx-auto min-h-screen w-full max-w-7xl px-4 py-6 lg:px-6">
+//         <button
+//           onClick={() => router.back()}
+//           className="mb-6 flex items-center gap-2 font-medium text-gray-600 hover:text-gray-900"
+//         >
+//           <ArrowLeft size={20} />
+//           Back
+//         </button>
+
+//         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+//         <aside className="rounded-xl border border-blue-100 bg-blue-50/60 p-6 lg:col-span-2">
+//           <h2 className={`${oxanium.className} text-3xl font-bold text-gray-900`}>Ready to declutter your dorm? 🚀</h2>
+//           <p className="mt-3 text-gray-700">
+//             Follow these simple steps to find a buyer within the campus community instantly.
+//           </p>
+
+//           <div className="mt-6 rounded-lg border border-blue-100 bg-white/70 p-5">
+//             <h3 className={`${oxanium.className} text-lg font-semibold text-gray-900`}>Quick Tips to Sell Faster</h3>
+//             <ul className="mt-4 space-y-4 text-base leading-7 text-gray-700">
+//               <li>
+//                 📸 <span className={`${oxanium.className} font-semibold`}>Snap Clear Photos:</span> Use natural light and show the item from multiple angles. High-quality visuals build immediate buyer trust.
+//               </li>
+//               <li>
+//                 ✍️ <span className={`${oxanium.className} font-semibold`}>Be Honest & Detailed:</span> Mention the exact condition, how long it was used, and any minor flaws upfront. Honesty prevents future disputes.
+//               </li>
+//               <li>
+//                 💰 <span className={`${oxanium.className} font-semibold`}>Set a Fair Price:</span> Check similar listings on UniNexus to stay competitive. A fair price is the fastest way to close a deal.
+//               </li>
+//               <li>
+//                 🏷️ <span className={`${oxanium.className} font-semibold`}>Categorize Correcty:</span> Ensure your item appears in the right searches by selecting the most accurate category.
+//               </li>
+//               <li>
+//                 ⚡ <span className={`${oxanium.className} font-semibold`}>Respond Quickly:</span> Interested buyers appreciate fast replies. Being responsive helps you secure the sale before someone else does.
+//               </li>
+//               <li>
+//                 🤝 <span className={`${oxanium.className} font-semibold`}>Meet Safely:</span> Always arrange to meet in a well-lit, public campus location for the final handover.
+//               </li>
+//             </ul>
+//           </div>
+
+//           <div className="mt-6 rounded-lg border border-emerald-100 bg-emerald-50/70 p-4">
+//             <p className={`${oxanium.className} text-base font-semibold text-emerald-800`}>Trusted by 1000+ Students</p>
+//             <p className="mt-1 text-sm text-emerald-900/80">
+//               Join the growing community of active buyers & sellers at your University.
+//             </p>
+//           </div>
+//         </aside>
+
+//         <section className="lg:col-span-3">
+//           <div className="mb-6">
+//             <h1 className={`${oxanium.className} text-4xl font-bold text-gray-900`}>Post an Item</h1>
+//             <p className="mt-2 text-gray-600">
+//               Sell your items to campus community and earn money
+//             </p>
+//           </div>
+
+//           <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-white/60 bg-white/10 p-8 shadow-[0_12px_40px_rgba(15,23,42,0.18)] backdrop-blur-sm">
+//             <div className="rounded-xl border border-white/70 bg-white/45 p-4 shadow-sm backdrop-blur-sm">
+//               <div className="mb-2 flex items-center justify-between text-sm text-slate-700 ">
+//                 <span>Step {currentStep} of 2</span>
+//                 <span>{progressValue}% Complete</span>
+//               </div>
+//               <div className="h-2 w-full rounded-full bg-black/10 shadow-sm backdrop-blur-sm">
+//                 <div
+//                   className="h-2 rounded-full bg-blue-500/95 shadow-[0_0_12px_rgba(59,130,246,0.35)] transition-all duration-300"
+//                   style={{ width: `${progressValue}%` }}
+//                 />
+//               </div>
+//             </div>
+
+//             {currentStep === 1 && (
+//               <>
+//                 <h2 className={`${oxanium.className} text-xl font-semibold text-gray-900`}>Step 1: Item Info</h2>
+
+//                 <div>
+//                   <label className={`${oxanium.className} mb-2 block text-base font-medium text-gray-700`}>Item Title *</label>
+//                   <input
+//                     type="text"
+//                     name="title"
+//                     value={formData.title}
+//                     onChange={handleInputChange}
+//                     placeholder="What are you selling today?"
+//                     className="w-full rounded-lg border border-white/70 bg-white/70 px-4 py-2 shadow-sm backdrop-blur-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/80"
+//                   />
+//                   {errors.title && <p className="mt-1 text-sm text-red-500">{errors.title}</p>}
+//                 </div>
+
+//                 <div>
+//                   <label className={`${oxanium.className} mb-2 block text-base font-medium text-gray-700`}>Description *</label>
+//                   <textarea
+//                     name="description"
+//                     value={formData.description}
+//                     onChange={handleInputChange}
+//                     placeholder="Tell buyers what makes this item useful and its condition."
+//                     rows={5}
+//                     minLength={10}
+//                     className="w-full rounded-lg border border-white/70 bg-white/70 px-4 py-2 shadow-sm backdrop-blur-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/80"
+//                   />
+//                   {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
+//                 </div>
+
+//                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+//                   <div>
+//                     <label className={`${oxanium.className} mb-2 block text-base font-medium text-gray-700`}>Category *</label>
+//                     <ModernSelect
+//                       name="category"
+//                       value={formData.category}
+//                       onChange={(nextValue) => handleSelectChange("category", nextValue)}
+//                       placeholder="Pick the best category"
+//                       options={CATEGORIES.map((category) => ({
+//                         value: category,
+//                         label: category,
+//                       }))}
+//                     />
+//                     {errors.category && <p className="mt-1 text-sm text-red-500">{errors.category}</p>}
+//                   </div>
+
+//                   <div>
+//                     <label className={`${oxanium.className} mb-2 block text-base font-medium text-gray-700`}>Condition *</label>
+//                     <ModernSelect
+//                       name="condition"
+//                       value={formData.condition}
+//                       onChange={(nextValue) => handleSelectChange("condition", nextValue)}
+//                       placeholder="Select item condition"
+//                       options={CONDITIONS.map((condition) => ({
+//                         value: condition,
+//                         label: condition.charAt(0).toUpperCase() + condition.slice(1),
+//                       }))}
+//                     />
+//                   </div>
+//                 </div>
+
+//                 <div>
+//                   <label className={`${oxanium.className} mb-2 block text-base font-medium text-gray-700`}>Location</label>
+//                   <ModernSelect
+//                     name="location"
+//                     value={formData.location}
+//                     onChange={(nextValue) => handleSelectChange("location", nextValue)}
+//                     placeholder="Select campus location"
+//                     options={CAMPUS_LOCATIONS.map((location) => ({
+//                       value: location,
+//                       label: location,
+//                     }))}
+//                   />
+//                 </div>
+//               </>
+//             )}
+
+//             {currentStep === 2 && (
+//               <>
+//                 <h2 className={`${oxanium.className} text-xl font-semibold text-gray-900`}>Step 2: Images & Price</h2>
+
+//                 <div>
+//                   <label className={`${oxanium.className} mb-2 block text-base font-medium text-gray-700`}>Price (Rs.) *</label>
+//                   <input
+//                     type="number"
+//                     name="price"
+//                     value={formData.price}
+//                     onChange={handleInputChange}
+//                     placeholder="How much are you asking (Rs.)?"
+//                     className="w-full rounded-lg border border-white/70 bg-white/70 px-4 py-2 shadow-sm backdrop-blur-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/80"
+//                   />
+//                   {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
+//                 </div>
+
+//                 <div>
+//                   <label className={`${oxanium.className} mb-2 block text-base font-medium text-gray-700`}>Images (Max 5) *</label>
+
+//                   {uploadedImages.length < 5 && (
+//                     <label className="cursor-pointer rounded-lg border-2 border-dashed border-white/70 bg-white/50 p-8 text-center transition-colors hover:border-blue-400/80 hover:bg-white/65">
+//                       <Upload className="mx-auto mb-2 text-slate-500" size={32} />
+//                       <p className="font-medium text-slate-700">Click to upload or drag images</p>
+//                       <p className="text-sm text-slate-600">PNG, JPG, GIF up to 10MB</p>
+//                       <input
+//                         type="file"
+//                         multiple
+//                         accept="image/*"
+//                         onChange={handleImageUpload}
+//                         className="hidden"
+//                       />
+//                     </label>
+//                   )}
+
+//                   {uploadedImages.length > 0 && (
+//                     <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3">
+//                       {uploadedImages.map((image, index) => (
+//                         <div key={index} className="group relative">
+//                           <img
+//                             src={image}
+//                             alt={`Product ${index + 1}`}
+//                             className="h-32 w-full rounded-lg object-cover"
+//                           />
+//                           <button
+//                             type="button"
+//                             onClick={() => removeImage(index)}
+//                             className="absolute right-1 top-1 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+//                           >
+//                             <X size={16} />
+//                           </button>
+//                         </div>
+//                       ))}
+//                     </div>
+//                   )}
+
+//                   {errors.images && <p className="mt-1 text-sm text-red-500">{errors.images}</p>}
+//                 </div>
+
+//                 {errors.submit && (
+//                   <div className="rounded-lg border border-red-300/70 bg-red-50/85 px-4 py-3 text-red-700 backdrop-blur-sm">
+//                     {errors.submit}
+//                   </div>
+//                 )}
+//               </>
+//             )}
+
+//             <div className="flex gap-4 pt-2">
+//               {currentStep === 1 ? (
+//                 <>
+//                   <button
+//                     type="button"
+//                     onClick={() => router.back()}
+//                     className="flex-1 rounded-lg border border-white/70 bg-white/60 px-6 py-2 font-medium text-slate-700 transition-colors hover:bg-white/80"
+//                   >
+//                     Cancel
+//                   </button>
+//                   <button
+//                     type="button"
+//                     onClick={() => setCurrentStep(2)}
+//                     disabled={!stepOneValid}
+//                     className="flex-1 rounded-lg bg-blue-600/90 px-6 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+//                   >
+//                     Next Step
+//                   </button>
+//                 </>
+//               ) : (
+//                 <>
+//                   <button
+//                     type="button"
+//                     onClick={() => setCurrentStep(1)}
+//                     className="flex-1 rounded-lg border border-white/70 bg-white/60 px-6 py-2 font-medium text-slate-700 transition-colors hover:bg-white/80"
+//                   >
+//                     Back to Item Info
+//                   </button>
+//                   <button
+//                     type="submit"
+//                     disabled={isLoading || !isFormValid || !stepTwoValid}
+//                     className="flex-1 rounded-lg bg-blue-600/90 px-6 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+//                   >
+//                     {isLoading ? "Posting..." : "Post Item"}
+//                   </button>
+//                 </>
+//               )}
+//             </div>
+//           </form>
+//         </section>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+
+
+
+
+
 
 
 "use client";
@@ -5,7 +552,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { createProduct } from "../services/product.service";
+import {
+  createProduct,
+  getSellerBankDetails,
+  saveSellerBankDetails,
+  type SellerBankDetailsInput,
+} from "../services/product.service";
 import { productSchema } from "../validations";
 import { ZodError } from "zod";
 import { Upload, X, ArrowLeft, ChevronDown, Check } from "lucide-react";
@@ -162,6 +714,11 @@ function ModernSelect({ name, value, onChange, placeholder, options }: ModernSel
 export default function PostItemPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isSavingBankDetails, setIsSavingBankDetails] = useState(false);
+  const [isBankDetailsSaved, setIsBankDetailsSaved] = useState(false);
+  const [isBankDetailsEditMode, setIsBankDetailsEditMode] = useState(true);
+  const [lastSavedBankDetails, setLastSavedBankDetails] =
+    useState<SellerBankDetailsInput | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
@@ -174,7 +731,49 @@ export default function PostItemPage() {
     condition: "used" as "new" | "used" | "refurbished",
     location: "",
     images: [] as string[],
+    sellerBankName: "",
+    sellerAccountHolder: "",
+    sellerAccountNumber: "",
+    sellerBranch: "",
   });
+
+  useEffect(() => {
+    const loadSavedBankDetails = async () => {
+      try {
+        const savedBankDetails = await getSellerBankDetails();
+        if (!savedBankDetails) return;
+
+        setFormData((prev) => {
+          const hasUserEnteredBankData =
+            prev.sellerBankName.trim().length > 0 ||
+            prev.sellerAccountHolder.trim().length > 0 ||
+            prev.sellerAccountNumber.trim().length > 0 ||
+            prev.sellerBranch.trim().length > 0;
+
+          if (hasUserEnteredBankData) {
+            return prev;
+          }
+
+          return {
+            ...prev,
+            sellerBankName: savedBankDetails.bankName,
+            sellerAccountHolder: savedBankDetails.accountHolderName,
+            sellerAccountNumber: savedBankDetails.accountNumber,
+            sellerBranch: savedBankDetails.branch,
+          };
+        });
+
+        setLastSavedBankDetails(savedBankDetails);
+        setIsBankDetailsSaved(true);
+        setIsBankDetailsEditMode(false);
+      } catch (error) {
+        // Keep form usable even if auto-fill fetch fails.
+        console.error("Failed to auto-fill seller bank details:", error);
+      }
+    };
+
+    loadSavedBankDetails();
+  }, []);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -215,6 +814,31 @@ export default function PostItemPage() {
       }
     }
 
+    if (name === "sellerBankName") {
+      if (value.length > 0 && value.trim().length < 2) {
+        errorMsg = "Bank name must be at least 2 characters.";
+      }
+    }
+
+    if (name === "sellerAccountHolder") {
+      if (value.length > 0 && value.trim().length < 3) {
+        errorMsg = "Account holder name must be at least 3 characters.";
+      }
+    }
+
+    if (name === "sellerAccountNumber") {
+      parsedValue = value.replace(/[^0-9]/g, "").slice(0, 20);
+      if (parsedValue.length > 0 && parsedValue.length < 8) {
+        errorMsg = "Account number must be at least 8 digits.";
+      }
+    }
+
+    if (name === "sellerBranch") {
+      if (value.length > 0 && value.trim().length < 2) {
+        errorMsg = "Branch name must be at least 2 characters.";
+      }
+    }
+
     // Update form state
     setFormData((prev) => ({
       ...prev,
@@ -250,6 +874,118 @@ export default function PostItemPage() {
       });
     }
   };
+
+  const sellerBankDetails = {
+    bankName: formData.sellerBankName.trim(),
+    accountHolderName: formData.sellerAccountHolder.trim(),
+    accountNumber: formData.sellerAccountNumber.trim(),
+    branch: formData.sellerBranch.trim(),
+  };
+
+  const isBankDetailsDirty =
+    !!lastSavedBankDetails &&
+    (sellerBankDetails.bankName !== lastSavedBankDetails.bankName ||
+      sellerBankDetails.accountHolderName !== lastSavedBankDetails.accountHolderName ||
+      sellerBankDetails.accountNumber !== lastSavedBankDetails.accountNumber ||
+      sellerBankDetails.branch !== lastSavedBankDetails.branch);
+
+  const bankDetailsValid =
+    sellerBankDetails.bankName.length >= 2 &&
+    sellerBankDetails.accountHolderName.length >= 3 &&
+    sellerBankDetails.accountNumber.length >= 8 &&
+    sellerBankDetails.branch.length >= 2 &&
+    !errors.sellerBankName &&
+    !errors.sellerAccountHolder &&
+    !errors.sellerAccountNumber &&
+    !errors.sellerBranch;
+
+  const handleSaveBankDetails = async () => {
+    setIsSavingBankDetails(true);
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.submit;
+      return next;
+    });
+
+    try {
+      if (!bankDetailsValid) {
+        setErrors((prev) => ({
+          ...prev,
+          ...(sellerBankDetails.bankName.length < 2
+            ? { sellerBankName: "Bank name must be at least 2 characters." }
+            : {}),
+          ...(sellerBankDetails.accountHolderName.length < 3
+            ? { sellerAccountHolder: "Account holder name must be at least 3 characters." }
+            : {}),
+          ...(sellerBankDetails.accountNumber.length < 8
+            ? { sellerAccountNumber: "Account number must be at least 8 digits." }
+            : {}),
+          ...(sellerBankDetails.branch.length < 2
+            ? { sellerBranch: "Branch name must be at least 2 characters." }
+            : {}),
+        }));
+
+        return;
+      }
+
+      await saveSellerBankDetails(sellerBankDetails);
+
+      setLastSavedBankDetails({
+        bankName: sellerBankDetails.bankName,
+        accountHolderName: sellerBankDetails.accountHolderName,
+        accountNumber: sellerBankDetails.accountNumber,
+        branch: sellerBankDetails.branch,
+      });
+      setIsBankDetailsSaved(true);
+      setIsBankDetailsEditMode(false);
+
+      setErrors((prev) => {
+        const nextErrors = { ...prev };
+        delete nextErrors.submit;
+        delete nextErrors.sellerBankName;
+        delete nextErrors.sellerAccountHolder;
+        delete nextErrors.sellerAccountNumber;
+        delete nextErrors.sellerBranch;
+        return nextErrors;
+      });
+    } catch (error) {
+      console.error("Save bank details error:", error);
+      setErrors((prev) => ({
+        ...prev,
+        submit: error instanceof Error ? error.message : "Failed to save bank details. Please try again.",
+      }));
+    } finally {
+      setIsSavingBankDetails(false);
+    }
+  };
+
+  const handleBankDetailsButtonClick = async () => {
+    if (!isBankDetailsSaved) {
+      await handleSaveBankDetails();
+      return;
+    }
+
+    if (!isBankDetailsEditMode) {
+      setIsBankDetailsEditMode(true);
+      return;
+    }
+
+    if (isBankDetailsDirty) {
+      await handleSaveBankDetails();
+    }
+  };
+
+  const getBankButtonLabel = () => {
+    if (isSavingBankDetails) return "Saving...";
+    if (!isBankDetailsSaved) return "Save";
+    if (!isBankDetailsEditMode) return "Edit";
+    return isBankDetailsDirty ? "Save Changes" : "Edit";
+  };
+
+  const isBankButtonDisabled =
+    isSavingBankDetails ||
+    (!isBankDetailsSaved && !bankDetailsValid) ||
+    (isBankDetailsSaved && isBankDetailsEditMode && !isBankDetailsDirty);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -333,10 +1069,11 @@ export default function PostItemPage() {
       const apiPayload = {
         ...validatedData,
         price: formattedPrice, 
+        sellerBankDetails,
       };
 
       // Create product
-      await createProduct(apiPayload as any);
+      await createProduct(apiPayload);
 
       // Success - redirect to products page
       router.push("/modules/uni-mart/my-items");
@@ -380,8 +1117,16 @@ export default function PostItemPage() {
     formData.price <= 1500000 &&
     formData.images.length >= 1 &&
     formData.images.length <= 5 &&
+    formData.sellerBankName.trim().length >= 2 &&
+    formData.sellerAccountHolder.trim().length >= 3 &&
+    formData.sellerAccountNumber.trim().length >= 8 &&
+    formData.sellerBranch.trim().length >= 2 &&
     !errors.price &&
-    !errors.images;
+    !errors.images &&
+    !errors.sellerBankName &&
+    !errors.sellerAccountHolder &&
+    !errors.sellerAccountNumber &&
+    !errors.sellerBranch;
 
   // Calculate Progress value
   const progressChecks = [
@@ -610,6 +1355,83 @@ export default function PostItemPage() {
                   )}
 
                   {errors.images && <p className="mt-2 text-sm font-medium text-red-500">{errors.images}</p>}
+                </div>
+
+                <div className="rounded-lg border border-white/70 bg-white/55 p-4 shadow-sm backdrop-blur-sm">
+                  <h3 className={`${oxanium.className} text-lg font-semibold text-gray-900`}>Seller Bank Details *</h3>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Add your bank details to receive payments from buyers.
+                  </p>
+
+                  <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <label className={`${oxanium.className} mb-2 block text-sm font-medium text-gray-700`}>Bank Name *</label>
+                      <input
+                        type="text"
+                        name="sellerBankName"
+                        value={formData.sellerBankName}
+                        onChange={handleInputChange}
+                        disabled={isBankDetailsSaved && !isBankDetailsEditMode}
+                        placeholder="e.g. Commercial Bank"
+                        className={`w-full rounded-lg border bg-white/80 px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/80 ${errors.sellerBankName ? 'border-red-400' : 'border-white/70'}`}
+                      />
+                      {errors.sellerBankName && <p className="mt-1 text-sm text-red-500">{errors.sellerBankName}</p>}
+                    </div>
+
+                    <div>
+                      <label className={`${oxanium.className} mb-2 block text-sm font-medium text-gray-700`}>Account Holder Name *</label>
+                      <input
+                        type="text"
+                        name="sellerAccountHolder"
+                        value={formData.sellerAccountHolder}
+                        onChange={handleInputChange}
+                        disabled={isBankDetailsSaved && !isBankDetailsEditMode}
+                        placeholder="Name as in bank account"
+                        className={`w-full rounded-lg border bg-white/80 px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/80 ${errors.sellerAccountHolder ? 'border-red-400' : 'border-white/70'}`}
+                      />
+                      {errors.sellerAccountHolder && <p className="mt-1 text-sm text-red-500">{errors.sellerAccountHolder}</p>}
+                    </div>
+
+                    <div>
+                      <label className={`${oxanium.className} mb-2 block text-sm font-medium text-gray-700`}>Account Number *</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        name="sellerAccountNumber"
+                        value={formData.sellerAccountNumber}
+                        onChange={handleInputChange}
+                        disabled={isBankDetailsSaved && !isBankDetailsEditMode}
+                        placeholder="Enter account number"
+                        className={`w-full rounded-lg border bg-white/80 px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/80 ${errors.sellerAccountNumber ? 'border-red-400' : 'border-white/70'}`}
+                      />
+                      {errors.sellerAccountNumber && <p className="mt-1 text-sm text-red-500">{errors.sellerAccountNumber}</p>}
+                    </div>
+
+                    <div>
+                      <label className={`${oxanium.className} mb-2 block text-sm font-medium text-gray-700`}>Branch *</label>
+                      <input
+                        type="text"
+                        name="sellerBranch"
+                        value={formData.sellerBranch}
+                        onChange={handleInputChange}
+                        disabled={isBankDetailsSaved && !isBankDetailsEditMode}
+                        placeholder="e.g. Malabe"
+                        className={`w-full rounded-lg border bg-white/80 px-4 py-2 text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/80 ${errors.sellerBranch ? 'border-red-400' : 'border-white/70'}`}
+                      />
+                      {errors.sellerBranch && <p className="mt-1 text-sm text-red-500">{errors.sellerBranch}</p>}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleBankDetailsButtonClick}
+                      disabled={isBankButtonDisabled}
+                      className="rounded-lg border border-emerald-600/50 bg-emerald-600/90 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+                    >
+                      {getBankButtonLabel()}
+                    </button>
+                  </div>
                 </div>
 
                 {errors.submit && (

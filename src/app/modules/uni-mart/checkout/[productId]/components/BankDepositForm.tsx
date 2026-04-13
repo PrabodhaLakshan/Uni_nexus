@@ -1,16 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, AlertCircle, CheckCircle } from "lucide-react";
+import { Upload, AlertCircle, CheckCircle, Building2, UserRound, Hash, MapPin } from "lucide-react";
+import type { SellerBankDetailsInput } from "../../../services/product.service";
 
 interface BankDepositFormProps {
   onSubmit: (file: File) => Promise<void>;
   isProcessing: boolean;
+  sellerBankDetails?: SellerBankDetailsInput | null;
 }
 
 export default function BankDepositForm({
   onSubmit,
   isProcessing,
+  sellerBankDetails,
 }: BankDepositFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -65,22 +68,66 @@ export default function BankDepositForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">
-        Upload Bank Deposit Receipt
-      </h2>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex gap-3">
-        <AlertCircle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
-        <div className="text-sm text-blue-900">
-          <p className="font-semibold mb-1">Bank Deposit Instructions (Demo Only):</p>
-          <ol className="list-decimal list-inside space-y-1 text-blue-800">
-            <li>Use sample/test data only</li>
-            <li>Do not use a real bank transfer</li>
-            <li>Upload any demo screenshot image as a receipt</li>
-            <li>Submit to continue testing the checkout flow</li>
-          </ol>
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-2xl border border-slate-200/70 bg-white/90 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-sm"
+    >
+      <div className="mb-5 flex items-center gap-3">
+        <div className="rounded-xl bg-blue-100 p-2 text-blue-700">
+          <Upload size={18} />
         </div>
+        <div>
+          <h2 className="text-xl font-bold text-slate-900">Upload Bank Deposit Receipt</h2>
+          <p className="text-sm text-slate-500">Submit your transfer receipt to continue the order.</p>
+        </div>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-blue-200/70 bg-gradient-to-br from-blue-50 via-indigo-50 to-sky-50 p-4">
+        <div className="mb-3 flex items-start gap-3">
+          <div className="rounded-lg bg-blue-100 p-2 text-blue-700 shadow-sm">
+            <AlertCircle size={18} className="flex-shrink-0" />
+          </div>
+          <div className="text-blue-900">
+            <p className="inline-flex rounded-full border border-blue-200 bg-white/80 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-blue-700">
+              Bank Transfer Details
+            </p>
+            <p className="mt-2 text-sm font-semibold text-blue-950">Seller Bank Details</p>
+            <p className="text-xs text-blue-700/80">Use these details exactly when making your transfer.</p>
+          </div>
+        </div>
+
+        {sellerBankDetails ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-blue-100 bg-white/85 p-3.5 shadow-sm shadow-blue-100/50">
+              <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-blue-700">
+                <Building2 size={15} /> Bank
+              </div>
+              <p className="text-sm font-bold text-blue-950">{sellerBankDetails.bankName}</p>
+            </div>
+            <div className="rounded-xl border border-blue-100 bg-white/85 p-3.5 shadow-sm shadow-blue-100/50">
+              <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-blue-700">
+                <UserRound size={15} /> Account Holder
+              </div>
+              <p className="text-sm font-bold text-blue-950">{sellerBankDetails.accountHolderName}</p>
+            </div>
+            <div className="rounded-xl border border-blue-100 bg-white/85 p-3.5 shadow-sm shadow-blue-100/50">
+              <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-blue-700">
+                <Hash size={15} /> Account Number
+              </div>
+              <p className="break-all font-mono text-[15px] font-bold tracking-wide text-blue-950">{sellerBankDetails.accountNumber}</p>
+            </div>
+            <div className="rounded-xl border border-blue-100 bg-white/85 p-3.5 shadow-sm shadow-blue-100/50">
+              <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-blue-700">
+                <MapPin size={15} /> Branch
+              </div>
+              <p className="text-sm font-bold text-blue-950">{sellerBankDetails.branch}</p>
+            </div>
+          </div>
+        ) : (
+          <p className="rounded-xl border border-blue-100 bg-white/80 p-3 text-sm leading-relaxed text-blue-800">
+            Seller bank details are not available yet. Please try another payment method or contact the seller.
+          </p>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -88,29 +135,31 @@ export default function BankDepositForm({
         <div>
           <label
             htmlFor="receipt"
-            className="block text-sm font-medium text-gray-700 mb-2"
+            className="mb-2 block text-sm font-medium text-slate-700"
           >
             Receipt Image
           </label>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition cursor-pointer"
-            onClick={() => document.getElementById("receipt")?.click()}>
+          <div
+            className="group cursor-pointer rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/70 p-8 text-center transition-all hover:border-blue-400 hover:bg-blue-50/50"
+            onClick={() => document.getElementById("receipt")?.click()}
+          >
             {preview ? (
               <div className="space-y-4">
-                <div className="relative inline-block">
+                <div className="relative inline-block overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
                   <img
                     src={preview}
                     alt="Receipt preview"
-                    className="max-h-40 rounded-lg"
+                    className="max-h-44 rounded-lg"
                   />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-10 rounded-lg">
+                  <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/10">
                     <CheckCircle size={40} className="text-green-500" />
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-semibold text-slate-900">
                     {selectedFile?.name}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="mt-1 text-xs text-slate-500">
                     {(selectedFile?.size || 0) / 1024 > 1024
                       ? ((selectedFile?.size || 0) / (1024 * 1024)).toFixed(2) +
                         " MB"
@@ -120,11 +169,11 @@ export default function BankDepositForm({
               </div>
             ) : (
               <div>
-                <Upload size={40} className="mx-auto text-gray-400 mb-2" />
-                <p className="text-gray-600 font-medium">
+                <Upload size={40} className="mx-auto mb-2 text-slate-400 transition-colors group-hover:text-blue-500" />
+                <p className="font-semibold text-slate-700">
                   Click to upload receipt
                 </p>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="mt-1 text-xs text-slate-500">
                   PNG, JPG, GIF up to 5MB
                 </p>
               </div>
@@ -141,23 +190,26 @@ export default function BankDepositForm({
         </div>
 
         {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 text-sm">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
           </div>
         )}
 
         {/* Submit Button */}
+        <p className="mb-3 text-xs text-slate-500">
+          Upload the receipt after transferring to the seller's bank account.
+        </p>
         <button
           type="submit"
           disabled={isProcessing || !selectedFile}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition"
+          className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3 font-semibold text-white transition hover:from-blue-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:from-slate-400 disabled:to-slate-400"
         >
           {isProcessing ? "Processing..." : "Confirm Order & Upload Receipt"}
         </button>
       </div>
 
-      <p className="text-xs text-gray-500 mt-4">
-        Demo mode: upload a sample image only. No real money transfer is required.
+      <p className="mt-4 text-xs text-slate-500">
+        Use the seller bank details above when making the transfer.
       </p>
     </form>
   );

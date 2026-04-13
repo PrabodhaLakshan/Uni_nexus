@@ -16,6 +16,12 @@ export interface Product {
   status: "AVAILABLE" | "RESERVED" | "SOLD"; // Transaction system
   createdAt: string;
   updatedAt: string;
+  sellerBankDetails?: {
+    bankName: string;
+    accountHolderName: string;
+    accountNumber: string;
+    branch: string;
+  } | null;
 }
 
 // User Types

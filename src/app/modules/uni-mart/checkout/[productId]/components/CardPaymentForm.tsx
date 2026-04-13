@@ -9,6 +9,9 @@ interface CardPaymentFormProps {
 }
 
 interface CardDetails {
+  cardNumber: string;
+  expiryDate: string;
+  cvv: string;
   cardholderName: string;
   email: string;
   phone: string;
@@ -19,15 +22,65 @@ export default function CardPaymentForm({
   isProcessing,
 }: CardPaymentFormProps) {
   const [formData, setFormData] = useState<CardDetails>({
-    cardholderName: "Demo Student",
-    email: "demo.student@uninexus.test",
-    phone: "0712345678",
+    cardNumber: "",
+    expiryDate: "",
+    cvv: "",
+    cardholderName: "",
+    email: "",
+    phone: "",
   });
   const [errors, setErrors] = useState<Partial<CardDetails>>({});
   const [touched, setTouched] = useState<Partial<Record<keyof CardDetails, boolean>>>({});
 
+  const sanitizeCardNumber = (value: string) => value.replace(/\D/g, "").slice(0, 19);
+
+  const formatCardNumber = (digits: string) =>
+    digits.replace(/(.{4})/g, "$1 ").trim();
+
+  const sanitizeExpiryDate = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 4);
+    if (digits.length <= 2) return digits;
+    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  };
+
+  const isValidExpiryDate = (value: string) => {
+    if (!/^\d{2}\/\d{2}$/.test(value)) return false;
+
+    const [monthStr, yearStr] = value.split("/");
+    const month = Number(monthStr);
+    const year = Number(`20${yearStr}`);
+
+    if (month < 1 || month > 12) return false;
+
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    return year > currentYear || (year === currentYear && month >= currentMonth);
+  };
+
   const validateForm = () => {
     const newErrors: Partial<CardDetails> = {};
+
+    const cardDigits = sanitizeCardNumber(formData.cardNumber);
+    if (!cardDigits) {
+      newErrors.cardNumber = "Card number is required";
+    } else if (cardDigits.length < 13 || cardDigits.length > 19) {
+      newErrors.cardNumber = "Card number must be between 13 and 19 digits";
+    }
+
+    if (!formData.expiryDate.trim()) {
+      newErrors.expiryDate = "Expiry date is required";
+    } else if (!isValidExpiryDate(formData.expiryDate)) {
+      newErrors.expiryDate = "Enter a valid future expiry date (MM/YY)";
+    }
+
+    const cvvDigits = formData.cvv.replace(/\D/g, "");
+    if (!cvvDigits) {
+      newErrors.cvv = "CVV is required";
+    } else if (cvvDigits.length < 3 || cvvDigits.length > 4) {
+      newErrors.cvv = "CVV must be 3 or 4 digits";
+    }
 
     if (!formData.cardholderName.trim()) {
       newErrors.cardholderName = "Cardholder name is required";
@@ -51,12 +104,34 @@ export default function CardPaymentForm({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
+    const nextValue = (() => {
+      if (name === "cardNumber") {
+        return formatCardNumber(sanitizeCardNumber(value));
+      }
+
+      if (name === "expiryDate") {
+        return sanitizeExpiryDate(value);
+      }
+
+      if (name === "cvv") {
+        return value.replace(/\D/g, "").slice(0, 4);
+      }
+
+      if (name === "phone") {
+        return value.replace(/[^\d+]/g, "").slice(0, 15);
+      }
+
+      return value;
+    })();
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: nextValue,
     }));
+
     if (touched[name as keyof CardDetails]) {
-      validateField(name as keyof CardDetails, value);
+      validateField(name as keyof CardDetails, nextValue);
     }
   };
 
@@ -73,6 +148,37 @@ export default function CardPaymentForm({
     const newErrors = { ...errors };
 
     switch (field) {
+      case "cardNumber": {
+        const cardDigits = sanitizeCardNumber(value);
+        if (!cardDigits) {
+          newErrors.cardNumber = "Card number is required";
+        } else if (cardDigits.length < 13 || cardDigits.length > 19) {
+          newErrors.cardNumber = "Card number must be between 13 and 19 digits";
+        } else {
+          delete newErrors.cardNumber;
+        }
+        break;
+      }
+      case "expiryDate":
+        if (!value.trim()) {
+          newErrors.expiryDate = "Expiry date is required";
+        } else if (!isValidExpiryDate(value)) {
+          newErrors.expiryDate = "Enter a valid future expiry date (MM/YY)";
+        } else {
+          delete newErrors.expiryDate;
+        }
+        break;
+      case "cvv": {
+        const cvvDigits = value.replace(/\D/g, "");
+        if (!cvvDigits) {
+          newErrors.cvv = "CVV is required";
+        } else if (cvvDigits.length < 3 || cvvDigits.length > 4) {
+          newErrors.cvv = "CVV must be 3 or 4 digits";
+        } else {
+          delete newErrors.cvv;
+        }
+        break;
+      }
       case "cardholderName":
         if (!value.trim()) {
           newErrors.cardholderName = "Cardholder name is required";
@@ -124,18 +230,101 @@ export default function CardPaymentForm({
         Card Payment Details
       </h2>
 
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex gap-3">
+      <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6 flex gap-3">
         <AlertCircle size={20} className="text-green-600 flex-shrink-0 mt-0.5" />
-        <div className="text-sm text-green-900">
-          <p className="font-semibold mb-1">Demo Mode:</p>
+        <div className="text-sm text-slate-700">
+          <p className="font-semibold mb-1">Billing Details</p>
           <p>
-            Checkout uses demo data only. The fields below are sample values for
-            testing and do not represent a real card payment.
+            Enter the billing contact details used for the Stripe checkout flow.
+            Your card payment itself is completed securely on Stripe.
           </p>
         </div>
       </div>
 
       <div className="space-y-5">
+        {/* Card Number */}
+        <div>
+          <label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700 mb-2">
+            Card Number *
+          </label>
+          <input
+            id="cardNumber"
+            type="text"
+            name="cardNumber"
+            value={formData.cardNumber}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            placeholder="1234 5678 9012 3456"
+            inputMode="numeric"
+            autoComplete="cc-number"
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition ${
+              touched.cardNumber && errors.cardNumber
+                ? "border-red-500 focus:ring-red-500"
+                : "border-gray-300 focus:ring-blue-500"
+            }`}
+            disabled={isProcessing}
+          />
+          {touched.cardNumber && errors.cardNumber && (
+            <p className="text-red-600 text-sm mt-1">{errors.cardNumber}</p>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {/* Expiry Date */}
+          <div>
+            <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-700 mb-2">
+              Expiry Date *
+            </label>
+            <input
+              id="expiryDate"
+              type="text"
+              name="expiryDate"
+              value={formData.expiryDate}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="MM/YY"
+              inputMode="numeric"
+              autoComplete="cc-exp"
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition ${
+                touched.expiryDate && errors.expiryDate
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-blue-500"
+              }`}
+              disabled={isProcessing}
+            />
+            {touched.expiryDate && errors.expiryDate && (
+              <p className="text-red-600 text-sm mt-1">{errors.expiryDate}</p>
+            )}
+          </div>
+
+          {/* CVV */}
+          <div>
+            <label htmlFor="cvv" className="block text-sm font-medium text-gray-700 mb-2">
+              CVV *
+            </label>
+            <input
+              id="cvv"
+              type="password"
+              name="cvv"
+              value={formData.cvv}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="123"
+              inputMode="numeric"
+              autoComplete="cc-csc"
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition ${
+                touched.cvv && errors.cvv
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-blue-500"
+              }`}
+              disabled={isProcessing}
+            />
+            {touched.cvv && errors.cvv && (
+              <p className="text-red-600 text-sm mt-1">{errors.cvv}</p>
+            )}
+          </div>
+        </div>
+
         {/* Cardholder Name */}
         <div>
           <label htmlFor="cardholderName" className="block text-sm font-medium text-gray-700 mb-2">
@@ -148,7 +337,7 @@ export default function CardPaymentForm({
             value={formData.cardholderName}
             onChange={handleChange}
             onBlur={handleBlur}
-            placeholder="Demo Student"
+            placeholder="Name on card"
             className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition ${
               touched.cardholderName && errors.cardholderName
                 ? "border-red-500 focus:ring-red-500"
@@ -173,7 +362,7 @@ export default function CardPaymentForm({
             value={formData.email}
             onChange={handleChange}
             onBlur={handleBlur}
-            placeholder="demo.student@uninexus.test"
+            placeholder="billing@example.com"
             className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition ${
               touched.email && errors.email
                 ? "border-red-500 focus:ring-red-500"
@@ -198,7 +387,7 @@ export default function CardPaymentForm({
             value={formData.phone}
             onChange={handleChange}
             onBlur={handleBlur}
-            placeholder="0712345678"
+            placeholder="07xxxxxxxx"
             className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition ${
               touched.phone && errors.phone
                 ? "border-red-500 focus:ring-red-500"
@@ -227,12 +416,12 @@ export default function CardPaymentForm({
           className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2"
         >
           <CreditCard size={20} />
-          {isProcessing ? "Processing..." : "Proceed to Stripe Checkout"}
+          {isProcessing ? "Processing..." : "Continue to Stripe Checkout"}
         </button>
       </div>
 
       <p className="text-xs text-gray-500 mt-4">
-        This is a demo checkout flow. Use only sample/test details.
+        Card data is used only for checkout validation and payment is completed securely on Stripe.
       </p>
     </form>
   );

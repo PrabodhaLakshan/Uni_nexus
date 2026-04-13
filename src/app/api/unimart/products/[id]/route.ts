@@ -15,7 +15,20 @@ export async function GET(
       where: { id },
       include: {
         seller: {
-          select: { id: true, name: true, email: true, student_id: true },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            student_id: true,
+            bank_details: {
+              select: {
+                bank_name: true,
+                account_holder_name: true,
+                account_number: true,
+                branch: true,
+              },
+            },
+          },
         },
       },
     });
@@ -26,11 +39,20 @@ export async function GET(
 
     const sellerName = product.seller?.name || "Unknown Seller";
     const sellerEmail = product.seller?.email || "";
+    const sellerBankDetails = product.seller?.bank_details
+      ? {
+          bankName: product.seller.bank_details.bank_name,
+          accountHolderName: product.seller.bank_details.account_holder_name,
+          accountNumber: product.seller.bank_details.account_number,
+          branch: product.seller.bank_details.branch,
+        }
+      : null;
 
     return NextResponse.json({
       ...product,
       sellerName,
       sellerEmail,
+      sellerBankDetails,
     });
   } catch (error) {
     console.error("GET /api/unimart/products/[id] error:", error);

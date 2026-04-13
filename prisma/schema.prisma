@@ -1,6 +1,5 @@
 generator client {
   provider   = "prisma-client-js"
-  provider   = "prisma-client-js"
   engineType = "library"
 }
 
@@ -62,14 +61,6 @@ model results {
   gpa      String?
   users    users?     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   subjects subjects[]
-  id       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id  String?    @db.Uuid
-  module   String?
-  grade    String?
-  semester String?
-  gpa      String?
-  users    users?     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  subjects subjects[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -106,6 +97,7 @@ model users {
   buyerConversations                                             Conversation[]          @relation("ConversationBuyer")
   sellerConversations                                            Conversation[]          @relation("ConversationSeller")
   conversationMessages                                           Message[]
+  bank_details                                                   bank_details?
   companies                                                      companies[]
   company_reviews                                                company_reviews[]
   gig_applications                                               gig_applications[]
@@ -200,8 +192,8 @@ model group_messages {
   sender_name  String?  @db.VarChar(120)
   sender_image String?
   message      String
-  reply_to_id  String?  @db.Uuid
   created_at   DateTime @default(now())
+  reply_to_id  String?  @db.Uuid
 
   @@index([group_id, created_at])
 }
@@ -490,4 +482,18 @@ model tutors {
   users          users            @relation(fields: [student_id], references: [student_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tutors_student_id")
 
   @@index([student_id], map: "idx_tutors_student_id")
+}
+
+model bank_details {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id             String    @unique @db.Uuid
+  bank_name           String    @db.VarChar(100)
+  account_holder_name String    @db.VarChar(150)
+  account_number      String    @db.VarChar(50)
+  branch              String    @db.VarChar(100)
+  created_at          DateTime? @default(now()) @db.Timestamp(6)
+  updated_at          DateTime? @default(now()) @db.Timestamp(6)
+  users               users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_bank_details_user_id")
 }

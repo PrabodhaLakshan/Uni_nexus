@@ -4,6 +4,23 @@ import { getToken } from "@/lib/auth";
 
 const API_BASE = "/api/unimart";
 
+export interface SellerBankDetailsInput {
+  bankName: string;
+  accountHolderName: string;
+  accountNumber: string;
+  branch: string;
+}
+
+interface SellerBankDetailsResponse {
+  success: boolean;
+  bankDetails: SellerBankDetailsInput | null;
+}
+
+export interface CreateProductPayload extends Omit<ProductFormData, "price"> {
+  price: string | number;
+  sellerBankDetails?: SellerBankDetailsInput;
+}
+
 // Get all products with pagination and filters
 export const getAllProducts = async (
   filters: SearchParams = {}
@@ -30,7 +47,7 @@ export const getProductById = async (id: string): Promise<Product> => {
 };
 
 // Create new product
-export const createProduct = async (data: ProductFormData): Promise<Product> => {
+export const createProduct = async (data: CreateProductPayload): Promise<Product> => {
   const token = getToken();
   console.log("Creating product with token:", token ? "Present" : "Missing");
   console.log("Product data:", data);
@@ -61,6 +78,65 @@ export const createProduct = async (data: ProductFormData): Promise<Product> => 
   }
   
   return response.json();
+};
+
+export const saveSellerBankDetails = async (
+  data: SellerBankDetailsInput
+): Promise<{ success: boolean }> => {
+  const token = getToken();
+
+  const response = await fetch(`${API_BASE}/bank-details`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { "Authorization": `Bearer ${token}` }),
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const responseText = await response.text();
+    let errorMessage = `Failed to save bank details (${response.status})`;
+
+    try {
+      const errorData = JSON.parse(responseText);
+      errorMessage = errorData.error || errorMessage;
+    } catch (error) {
+      if (responseText) errorMessage = responseText;
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+};
+
+export const getSellerBankDetails = async (): Promise<SellerBankDetailsInput | null> => {
+  const token = getToken();
+
+  const response = await fetch(`${API_BASE}/bank-details`, {
+    method: "GET",
+    headers: {
+      ...(token && { "Authorization": `Bearer ${token}` }),
+    },
+  });
+
+  if (!response.ok) {
+    const responseText = await response.text();
+    let errorMessage = `Failed to fetch bank details (${response.status})`;
+
+    try {
+      const errorData = JSON.parse(responseText);
+      errorMessage = errorData.error || errorMessage;
+    } catch (error) {
+      if (responseText) errorMessage = responseText;
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  const data: SellerBankDetailsResponse = await response.json();
+  return data.bankDetails;
 };
 
 // Update product

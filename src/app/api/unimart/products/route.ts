@@ -123,6 +123,7 @@ export async function POST(request: NextRequest) {
     console.log("Request body:", body);
     const { title, description, price, category, condition, location, images } =
       body;
+    const sellerBankDetails = body.sellerBankDetails;
 
     // Validate required fields
     if (!title || !description || !price || !category || !condition || !images?.length) {
@@ -141,23 +142,58 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (sellerBankDetails) {
+      const { bankName, accountHolderName, accountNumber, branch } = sellerBankDetails;
+
+      if (!bankName || !accountHolderName || !accountNumber || !branch) {
+        return NextResponse.json(
+          { error: "Missing bank details fields" },
+          { status: 400 }
+        );
+      }
+    }
+
     console.log("Creating product for seller:", payload.userId);
-    const product = await prismaDelegates.uniMartProducts.create({
-      data: {
-        title,
-        description,
-        price: parseFloat(price),
-        category,
-        condition,
-        location: location || null,
-        images,
-        sellerId: payload.userId,
-      },
-      include: {
-        seller: {
-          select: { id: true, name: true, email: true },
+    const product = await prismaDelegates.$transaction(async (tx: any) => {
+      const createdProduct = await tx.uniMartProducts.create({
+        data: {
+          title,
+          description,
+          price: parseFloat(price),
+          category,
+          condition,
+          location: location || null,
+          images,
+          sellerId: payload.userId,
         },
-      },
+        include: {
+          seller: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      });
+
+      if (sellerBankDetails) {
+        await tx.bank_details.upsert({
+          where: { user_id: payload.userId },
+          create: {
+            user_id: payload.userId,
+            bank_name: sellerBankDetails.bankName.trim(),
+            account_holder_name: sellerBankDetails.accountHolderName.trim(),
+            account_number: sellerBankDetails.accountNumber.trim(),
+            branch: sellerBankDetails.branch.trim(),
+          },
+          update: {
+            bank_name: sellerBankDetails.bankName.trim(),
+            account_holder_name: sellerBankDetails.accountHolderName.trim(),
+            account_number: sellerBankDetails.accountNumber.trim(),
+            branch: sellerBankDetails.branch.trim(),
+            updated_at: new Date(),
+          },
+        });
+      }
+
+      return createdProduct;
     });
 
     console.log("Product created successfully:", product.id);
