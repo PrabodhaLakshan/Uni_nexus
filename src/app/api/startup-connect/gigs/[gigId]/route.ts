@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { formatDate, normalizeString } from "../../_shared";
+import { recordStartupCollaboration } from "../../_collaborations";
 
 export const runtime = "nodejs";
 
@@ -198,22 +199,17 @@ export async function DELETE(_: Request, context: RouteContext) {
       return NextResponse.json({ success: false, error: "Gig not found." }, { status: 404 });
     }
 
-    // First, ensure collaborations are recorded for accepted applications.
+    // Best-effort: collaboration links should not block gig deletion.
     for (const app of gig.gig_applications) {
-      await prisma.startup_collaborations.upsert({
-        where: {
-          user_id_company_id: {
-            user_id: app.user_id,
-            company_id: gig.company_id,
-          },
-        },
-        create: {
-          user_id: app.user_id,
-          company_id: gig.company_id,
-          gig_title: gig.title,
-        },
-        update: { gig_title: gig.title },
-      });
+      try {
+        await recordStartupCollaboration(app.user_id, gig.company_id, gig.title);
+      } catch (collabError) {
+        console.error("STARTUP_GIG_DELETE_COLLAB_SAVE_ERROR:", {
+          gigId,
+          userId: app.user_id,
+          error: collabError,
+        });
+      }
     }
 
     // Soft-delete the gig. On some legacy databases Prisma can throw a

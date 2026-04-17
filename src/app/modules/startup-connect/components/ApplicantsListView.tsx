@@ -14,6 +14,7 @@ import {
   Linkedin,
   FileText,
   ExternalLink,
+  ClipboardCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,6 +30,7 @@ type ApplicantRow = {
   date: string;
   status: string;
   rawStatus: string;
+  isCompletionApproved?: boolean;
   image: string;
   skills: string[];
   experience: string;
@@ -122,6 +124,7 @@ export const ApplicantsListView: React.FC = () => {
     try {
       const res = await fetch("/api/startup-connect/dashboard/applications", {
         headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
       });
       const json = (await res.json()) as { success?: boolean; data?: GigGroup[]; error?: string };
       if (!res.ok || !json.success || !json.data) {
@@ -241,7 +244,10 @@ export const ApplicantsListView: React.FC = () => {
 
   const patchStatus = async (applicationId: string, status: "ACCEPTED" | "REJECTED" | "REVIEWED") => {
     const token = getToken();
-    if (!token) return;
+    if (!token) {
+      window.alert("Your session has expired. Please log in again.");
+      return;
+    }
     setActionId(applicationId);
     try {
       const res = await fetch(`/api/startup-connect/applications/${applicationId}`, {
@@ -257,7 +263,51 @@ export const ApplicantsListView: React.FC = () => {
         window.alert(json.error || "Update failed");
         return;
       }
+
+      // Reflect status change immediately in UI even if list reload is delayed.
+      setGigs((prev) =>
+        prev
+          .map((gig) => {
+            const hasApplicant = gig.applicants.some((a) => a.id === applicationId);
+            if (!hasApplicant) return gig;
+
+            if (status === "REJECTED") {
+              return {
+                ...gig,
+                applicants: gig.applicants.filter((a) => a.id !== applicationId),
+              };
+            }
+
+            return {
+              ...gig,
+              applicants: gig.applicants.map((a) => {
+                if (a.id !== applicationId) return a;
+                if (status === "ACCEPTED") {
+                  return {
+                    ...a,
+                    status: "Accepted",
+                    rawStatus: "ACCEPTED",
+                  };
+                }
+                if (status === "REVIEWED") {
+                  return {
+                    ...a,
+                    status: "Completed",
+                    rawStatus: "REVIEWED",
+                    isCompletionApproved: true,
+                  };
+                }
+                return a;
+              }),
+            };
+          })
+          .filter((gig) => gig.applicants.length > 0)
+      );
+
       await load();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Update failed";
+      window.alert(message);
     } finally {
       setActionId(null);
     }
@@ -269,6 +319,8 @@ export const ApplicantsListView: React.FC = () => {
         return "bg-yellow-50 text-yellow-700 border-yellow-100";
       case "Reviewed":
         return "bg-blue-50 text-blue-700 border-blue-100";
+      case "Completed":
+        return "bg-emerald-50 text-emerald-700 border-emerald-100";
       case "Accepted":
         return "bg-green-50 text-green-700 border-green-100";
       case "Rejected":
@@ -354,7 +406,11 @@ export const ApplicantsListView: React.FC = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {gig.applicants.map((applicant) => (
+                      {gig.applicants.map((applicant) => {
+                        const statusUpper = applicant.rawStatus?.trim().toUpperCase();
+                        const isCompleted = Boolean(applicant.isCompletionApproved);
+                        const displayStatus = isCompleted ? "Completed" : applicant.status;
+                        return (
                         <div
                           key={applicant.id}
                           className={cn(
@@ -375,10 +431,10 @@ export const ApplicantsListView: React.FC = () => {
                                   <span
                                     className={cn(
                                       "rounded-lg border px-3 py-1 text-[10px] font-black",
-                                      getStatusColor(applicant.status)
+                                      getStatusColor(displayStatus)
                                     )}
                                   >
-                                    {applicant.status}
+                                    {displayStatus}
                                   </span>
                                 </div>
 
@@ -460,7 +516,11 @@ export const ApplicantsListView: React.FC = () => {
                               ) : null}
                               <Button
                                 type="button"
-                                disabled={actionId === applicant.id || applicant.rawStatus === "ACCEPTED"}
+                                disabled={
+                                  actionId === applicant.id ||
+                                  statusUpper === "ACCEPTED" ||
+                                  isCompleted
+                                }
                                 onClick={() => void patchStatus(applicant.id, "ACCEPTED")}
                                 className="flex h-10 flex-1 items-center gap-2 rounded-xl bg-green-100 px-4 text-[10px] font-black uppercase text-green-600 hover:bg-green-200 lg:flex-none"
                               >
@@ -468,7 +528,23 @@ export const ApplicantsListView: React.FC = () => {
                               </Button>
                               <Button
                                 type="button"
-                                disabled={actionId === applicant.id || applicant.rawStatus === "REJECTED"}
+                                disabled={
+                                  actionId === applicant.id ||
+                                  statusUpper !== "ACCEPTED" ||
+                                  isCompleted
+                                }
+                                onClick={() => void patchStatus(applicant.id, "REVIEWED")}
+                                className="flex h-10 flex-1 items-center gap-2 rounded-xl bg-emerald-100 px-4 text-[10px] font-black uppercase text-emerald-700 hover:bg-emerald-200 lg:flex-none disabled:opacity-60"
+                              >
+                                <ClipboardCheck size={16} /> Mark Done
+                              </Button>
+                              <Button
+                                type="button"
+                                disabled={
+                                  actionId === applicant.id ||
+                                  statusUpper === "REJECTED" ||
+                                  isCompleted
+                                }
                                 onClick={() => void patchStatus(applicant.id, "REJECTED")}
                                 className="flex h-10 flex-1 items-center gap-2 rounded-xl bg-red-100 px-4 text-[10px] font-black uppercase text-red-600 hover:bg-red-200 lg:flex-none"
                               >
@@ -484,7 +560,8 @@ export const ApplicantsListView: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -543,10 +620,10 @@ export const ApplicantsListView: React.FC = () => {
                     <span
                       className={cn(
                         "inline-flex items-center rounded-lg border px-3 py-1 text-[10px] font-black",
-                        getStatusColor(selectedApplicant.status)
+                        getStatusColor(selectedApplicant.isCompletionApproved ? "Completed" : selectedApplicant.status)
                       )}
                     >
-                      {selectedApplicant.status}
+                      {selectedApplicant.isCompletionApproved ? "Completed" : selectedApplicant.status}
                     </span>
                   </div>
                 </div>
