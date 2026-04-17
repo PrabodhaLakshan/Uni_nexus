@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { verifyToken } from "@/lib/auth";
-import { normalizeString, resolveCompanyId } from "../../_shared";
+import { normalizeString } from "../../_shared";
 import { recordStartupCollaboration } from "../../_collaborations";
 import { getGigCompletionApproval, recordGigCompletionApproval } from "../../_completion";
 
@@ -55,15 +55,35 @@ export async function PATCH(req: Request, context: RouteContext) {
       return NextResponse.json({ success: false, error: "Application not found." }, { status: 404 });
     }
 
-    const ownerCompanyId = await resolveCompanyId(req);
-    if (!ownerCompanyId || ownerCompanyId !== existing.gigs?.company_id) {
+    const founder = verifyToken(req.headers.get("authorization") || undefined);
+    if (!founder?.userId) {
+      return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
+    }
+
+    const ownedCompany = await prisma.companies.findFirst({
+      where: {
+        id: existing.gigs?.company_id,
+        owner_id: founder.userId,
+      },
+      select: { id: true },
+    });
+
+    if (!ownedCompany?.id) {
       return NextResponse.json({ success: false, error: "Not allowed to update this application." }, { status: 403 });
     }
 
     const prevUpper = existing.status.toUpperCase();
     const wasAlreadyAccepted = prevUpper === "ACCEPTED";
     const wasAlreadyRejected = prevUpper === "REJECTED";
-    const wasAlreadyReviewed = await getGigCompletionApproval(applicationId);
+    let wasAlreadyReviewed = false;
+    try {
+      wasAlreadyReviewed = await getGigCompletionApproval(applicationId);
+    } catch (completionErr) {
+      console.error("APPLICATION_COMPLETION_CHECK_ERROR:", {
+        applicationId,
+        error: completionErr,
+      });
+    }
 
     let updated;
     if (status === "REJECTED") {
@@ -94,12 +114,21 @@ export async function PATCH(req: Request, context: RouteContext) {
       });
     }
 
-    const founder = verifyToken(req.headers.get("authorization") || undefined);
     const companyName = existing.gigs?.companies?.name?.trim() || "A startup";
     const gigTitle = existing.gigs?.title?.trim() || "a gig";
 
     if (status === "ACCEPTED" && existing.gigs) {
-      await recordStartupCollaboration(existing.user_id, existing.gigs.company_id, existing.gigs.title);
+      try {
+        await recordStartupCollaboration(existing.user_id, existing.gigs.company_id, existing.gigs.title);
+      } catch (collabErr) {
+        console.error("APPLICATION_ACCEPT_COLLAB_SAVE_ERROR:", {
+          applicationId,
+          gigId: existing.gig_id,
+          userId: existing.user_id,
+          companyId: existing.gigs.company_id,
+          error: collabErr,
+        });
+      }
 
       if (!wasAlreadyAccepted) {
         const message = `${companyName} accepted your application for "${gigTitle}". Check Startup Connect for next steps.`;

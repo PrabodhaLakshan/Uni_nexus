@@ -124,6 +124,7 @@ export const ApplicantsListView: React.FC = () => {
     try {
       const res = await fetch("/api/startup-connect/dashboard/applications", {
         headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
       });
       const json = (await res.json()) as { success?: boolean; data?: GigGroup[]; error?: string };
       if (!res.ok || !json.success || !json.data) {
@@ -243,7 +244,10 @@ export const ApplicantsListView: React.FC = () => {
 
   const patchStatus = async (applicationId: string, status: "ACCEPTED" | "REJECTED" | "REVIEWED") => {
     const token = getToken();
-    if (!token) return;
+    if (!token) {
+      window.alert("Your session has expired. Please log in again.");
+      return;
+    }
     setActionId(applicationId);
     try {
       const res = await fetch(`/api/startup-connect/applications/${applicationId}`, {
@@ -259,7 +263,51 @@ export const ApplicantsListView: React.FC = () => {
         window.alert(json.error || "Update failed");
         return;
       }
+
+      // Reflect status change immediately in UI even if list reload is delayed.
+      setGigs((prev) =>
+        prev
+          .map((gig) => {
+            const hasApplicant = gig.applicants.some((a) => a.id === applicationId);
+            if (!hasApplicant) return gig;
+
+            if (status === "REJECTED") {
+              return {
+                ...gig,
+                applicants: gig.applicants.filter((a) => a.id !== applicationId),
+              };
+            }
+
+            return {
+              ...gig,
+              applicants: gig.applicants.map((a) => {
+                if (a.id !== applicationId) return a;
+                if (status === "ACCEPTED") {
+                  return {
+                    ...a,
+                    status: "Accepted",
+                    rawStatus: "ACCEPTED",
+                  };
+                }
+                if (status === "REVIEWED") {
+                  return {
+                    ...a,
+                    status: "Completed",
+                    rawStatus: "REVIEWED",
+                    isCompletionApproved: true,
+                  };
+                }
+                return a;
+              }),
+            };
+          })
+          .filter((gig) => gig.applicants.length > 0)
+      );
+
       await load();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Update failed";
+      window.alert(message);
     } finally {
       setActionId(null);
     }

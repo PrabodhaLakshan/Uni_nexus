@@ -125,10 +125,11 @@ export async function POST(request: Request) {
             company_id: string;
             status: string;
             created_at: Date | null;
+            budget: unknown;
           }[]
-        >`INSERT INTO "gigs" ("company_id", "title", "description", "status")
-          VALUES (${companyId}, ${title}, ${description}, 'OPEN')
-          RETURNING "id", "title", "description", "company_id", "status", "created_at"`;
+        >`INSERT INTO "gigs" ("company_id", "title", "description", "budget", "status")
+          VALUES (${companyId}, ${title}, ${description}, ${budget}, 'OPEN')
+          RETURNING "id", "title", "description", "company_id", "status", "created_at", "budget"`;
 
         const row = rows[0];
         if (!row) {
@@ -140,7 +141,7 @@ export async function POST(request: Request) {
           title: row.title,
           description: row.description,
           requirements: skills,
-          budget: null,
+          budget: row.budget != null ? { toString: () => String(row.budget) } : null,
           company_id: row.company_id,
           status: row.status,
           created_at: row.created_at,

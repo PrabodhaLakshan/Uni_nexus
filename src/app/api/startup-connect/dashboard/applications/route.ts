@@ -136,7 +136,15 @@ export async function GET(req: Request) {
 
     for (const gig of data) {
       for (const applicant of gig.applicants as Array<{ id: string; isCompletionApproved: boolean }>) {
-        applicant.isCompletionApproved = await getGigCompletionApproval(applicant.id);
+        try {
+          applicant.isCompletionApproved = await getGigCompletionApproval(applicant.id);
+        } catch (completionErr) {
+          console.error("STARTUP_DASHBOARD_APPLICATIONS_COMPLETION_CHECK_ERROR:", {
+            applicationId: applicant.id,
+            error: completionErr,
+          });
+          applicant.isCompletionApproved = false;
+        }
       }
     }
 
