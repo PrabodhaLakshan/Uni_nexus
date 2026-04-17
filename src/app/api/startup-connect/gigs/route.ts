@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { formatDate, normalizeString, resolveCompanyId } from "../_shared";
+import { verifyToken } from "@/lib/auth";
+import { notifyBookmarkedUsersAboutGig } from "../_bookmarkAlerts";
 
 export const runtime = "nodejs";
 
@@ -60,6 +62,8 @@ export async function POST(req: Request) {
         ? body.budget
         : parseFloat(normalizeString(body.budget).replace(/[^0-9.]/g, ""));
     const budget = Number.isFinite(budgetValue) && budgetValue > 0 ? budgetValue : null;
+    const authHeader = req.headers.get("authorization") || undefined;
+    const payload = verifyToken(authHeader);
 
     if (!title || !companyId) {
       return NextResponse.json(
@@ -68,15 +72,83 @@ export async function POST(req: Request) {
       );
     }
 
-    const created = await prisma.gigs.create({
-      data: {
-        company_id: companyId,
-        title,
-        description,
-        requirements: skills,
-        budget,
-        status: "OPEN",
-      },
+    const company = await prisma.companies.findUnique({
+      where: { id: companyId },
+      select: { name: true },
+    });
+    const companyName = company?.name?.trim() || "A startup";
+
+    let created: {
+      id: string;
+      title: string;
+      description: string;
+      requirements: string[] | null;
+      budget: { toString(): string } | null;
+      status: string;
+      company_id: string;
+      created_at: Date | null;
+    };
+
+    try {
+      created = await prisma.gigs.create({
+        data: {
+          company_id: companyId,
+          title,
+          description,
+          requirements: skills,
+          budget,
+          status: "OPEN",
+        },
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+
+      // Fallback for legacy databases where Prisma reports a mysterious
+      // `(not available)` column on gigs.create(). We bypass the broken
+      // mapping and do a minimal insert with raw SQL.
+      if (message.includes("not available") || message.includes("gigs.create")) {
+        const rows = await prisma.$queryRaw<
+          {
+            id: string;
+            title: string;
+            description: string;
+            company_id: string;
+            status: string;
+            created_at: Date | null;
+            budget: unknown;
+          }[]
+        >`INSERT INTO "gigs" ("company_id", "title", "description", "budget", "status")
+          VALUES (${companyId}, ${title}, ${description}, ${budget}, 'OPEN')
+          RETURNING "id", "title", "description", "company_id", "status", "created_at", "budget"`;
+
+        const row = rows[0];
+        if (!row) {
+          throw err;
+        }
+
+        created = {
+          id: row.id,
+          title: row.title,
+          description: row.description,
+          requirements: [],
+          budget: row.budget != null ? { toString: () => String(row.budget) } : null,
+          status: row.status,
+          company_id: row.company_id,
+          created_at: row.created_at,
+        };
+      } else {
+        throw err;
+      }
+    }
+
+    await notifyBookmarkedUsersAboutGig({
+      gigId: created.id,
+      title: created.title,
+      description: created.description,
+      companyId: created.company_id,
+      companyName,
+      skills,
+      senderUserId: payload?.userId,
     });
 
     return NextResponse.json({

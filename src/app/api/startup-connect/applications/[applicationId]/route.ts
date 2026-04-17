@@ -2,8 +2,9 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { verifyToken } from "@/lib/auth";
-import { normalizeString, resolveCompanyId } from "../../_shared";
+import { normalizeString } from "../../_shared";
 import { recordStartupCollaboration } from "../../_collaborations";
+import { getGigCompletionApproval, recordGigCompletionApproval } from "../../_completion";
 
 export const runtime = "nodejs";
 
@@ -54,14 +55,35 @@ export async function PATCH(req: Request, context: RouteContext) {
       return NextResponse.json({ success: false, error: "Application not found." }, { status: 404 });
     }
 
-    const ownerCompanyId = await resolveCompanyId(req);
-    if (!ownerCompanyId || ownerCompanyId !== existing.gigs?.company_id) {
+    const founder = verifyToken(req.headers.get("authorization") || undefined);
+    if (!founder?.userId) {
+      return NextResponse.json({ success: false, error: "Unauthorized." }, { status: 401 });
+    }
+
+    const ownedCompany = await prisma.companies.findFirst({
+      where: {
+        id: existing.gigs?.company_id,
+        owner_id: founder.userId,
+      },
+      select: { id: true },
+    });
+
+    if (!ownedCompany?.id) {
       return NextResponse.json({ success: false, error: "Not allowed to update this application." }, { status: 403 });
     }
 
     const prevUpper = existing.status.toUpperCase();
     const wasAlreadyAccepted = prevUpper === "ACCEPTED";
     const wasAlreadyRejected = prevUpper === "REJECTED";
+    let wasAlreadyReviewed = false;
+    try {
+      wasAlreadyReviewed = await getGigCompletionApproval(applicationId);
+    } catch (completionErr) {
+      console.error("APPLICATION_COMPLETION_CHECK_ERROR:", {
+        applicationId,
+        error: completionErr,
+      });
+    }
 
     let updated;
     if (status === "REJECTED") {
@@ -69,6 +91,22 @@ export async function PATCH(req: Request, context: RouteContext) {
         where: { id: applicationId },
       });
       updated = null;
+    } else if (status === "REVIEWED") {
+      if (prevUpper !== "ACCEPTED") {
+        return NextResponse.json(
+          { success: false, error: "Only accepted applications can be marked as done." },
+          { status: 400 }
+        );
+      }
+
+      await recordGigCompletionApproval({
+        applicationId,
+        userId: existing.user_id,
+        companyId: existing.gigs.company_id,
+        gigId: existing.gig_id,
+      });
+
+      updated = existing;
     } else {
       updated = await prisma.gig_applications.update({
         where: { id: applicationId },
@@ -76,12 +114,21 @@ export async function PATCH(req: Request, context: RouteContext) {
       });
     }
 
-    const founder = verifyToken(req.headers.get("authorization") || undefined);
     const companyName = existing.gigs?.companies?.name?.trim() || "A startup";
     const gigTitle = existing.gigs?.title?.trim() || "a gig";
 
     if (status === "ACCEPTED" && existing.gigs) {
-      await recordStartupCollaboration(existing.user_id, existing.gigs.company_id, existing.gigs.title);
+      try {
+        await recordStartupCollaboration(existing.user_id, existing.gigs.company_id, existing.gigs.title);
+      } catch (collabErr) {
+        console.error("APPLICATION_ACCEPT_COLLAB_SAVE_ERROR:", {
+          applicationId,
+          gigId: existing.gig_id,
+          userId: existing.user_id,
+          companyId: existing.gigs.company_id,
+          error: collabErr,
+        });
+      }
 
       if (!wasAlreadyAccepted) {
         const message = `${companyName} accepted your application for "${gigTitle}". Check Startup Connect for next steps.`;
@@ -135,7 +182,35 @@ export async function PATCH(req: Request, context: RouteContext) {
       }
     }
 
-    return NextResponse.json({ success: true, data: updated });
+    if (status === "REVIEWED" && !wasAlreadyReviewed) {
+      const message = `${companyName} marked your work for "${gigTitle}" as completed. You can now submit your startup review.`;
+      try {
+        await prisma.app_notifications.create({
+          data: {
+            id: randomUUID(),
+            receiver_id: existing.user_id,
+            sender_id: founder?.userId ?? null,
+            type: "collaboration_completed",
+            title: "Work marked as completed",
+            message: message.slice(0, 500),
+            meta: {
+              applicationId,
+              gigId: existing.gig_id,
+              gigTitle,
+              companyName,
+            },
+          },
+        });
+      } catch (notifyErr) {
+        console.error("APPLICATION_REVIEWED_NOTIFY_ERROR:", notifyErr);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: updated,
+      isCompletionApproved: status === "REVIEWED" ? true : wasAlreadyReviewed,
+    });
   } catch (error) {
     console.error("STARTUP_APPLICATION_PATCH_ERROR:", error);
     const message = error instanceof Error ? error.message : "Failed to update application";
