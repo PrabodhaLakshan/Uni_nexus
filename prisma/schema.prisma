@@ -75,48 +75,51 @@ model subjects {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model users {
-  id                                                             String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  student_id                                                     String                  @unique @db.VarChar(50)
-  name                                                           String                  @db.VarChar(100)
-  email                                                          String                  @unique @db.VarChar(100)
+  id                                                             String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_id                                                     String                     @unique @db.VarChar(50)
+  name                                                           String                     @db.VarChar(100)
+  email                                                          String                     @unique @db.VarChar(100)
   password                                                       String
-  specialization                                                 String?                 @db.VarChar(100)
+  specialization                                                 String?                    @db.VarChar(100)
   year                                                           Int?
   semester                                                       Int?
   skills                                                         String[]
   bio                                                            String?
-  rating                                                         Decimal?                @default(0) @db.Decimal
-  created_at                                                     DateTime?               @default(now()) @db.Timestamp(6)
+  rating                                                         Decimal?                   @default(0) @db.Decimal
+  created_at                                                     DateTime?                  @default(now()) @db.Timestamp(6)
   github_url                                                     String?
   linkedin_url                                                   String?
-  mobile_no                                                      String?                 @db.VarChar(20)
-  group_status                                                   String?                 @default("NO_GROUP") @db.VarChar(20)
+  mobile_no                                                      String?                    @db.VarChar(20)
+  group_status                                                   String?                    @default("NO_GROUP") @db.VarChar(20)
   avatar_path                                                    String?
   group_number                                                   String?
-  role                                                           String                  @default("STUDENT") @db.VarChar(20)
-  Conversation_Conversation_buyerIdTousers                       Conversation[]          @relation("Conversation_buyerIdTousers")
-  Conversation_Conversation_sellerIdTousers                      Conversation[]          @relation("Conversation_sellerIdTousers")
+  role                                                           String                     @default("STUDENT") @db.VarChar(20)
+  Conversation_Conversation_buyerIdTousers                       Conversation[]             @relation("Conversation_buyerIdTousers")
+  Conversation_Conversation_sellerIdTousers                      Conversation[]             @relation("Conversation_sellerIdTousers")
   Message                                                        Message[]
+  bank_details                                                   bank_details?
   companies                                                      companies[]
   company_reviews                                                company_reviews[]
   gig_applications                                               gig_applications[]
+  gig_bookmarks                                                  gig_bookmarks[]
+  gig_completion_approvals                                       gig_completion_approvals[]
   group_members                                                  group_members[]
   groups                                                         groups[]
   messages                                                       messages[]
   project_group                                                  project_group[]
-  project_group_invites_project_group_invites_receiver_idTousers project_group_invites[] @relation("project_group_invites_receiver_idTousers")
-  project_group_invites_project_group_invites_sender_idTousers   project_group_invites[] @relation("project_group_invites_sender_idTousers")
+  project_group_invites_project_group_invites_receiver_idTousers project_group_invites[]    @relation("project_group_invites_receiver_idTousers")
+  project_group_invites_project_group_invites_sender_idTousers   project_group_invites[]    @relation("project_group_invites_sender_idTousers")
   project_group_members                                          project_group_members?
   projects                                                       projects[]
-  ratings_ratings_reviewed_user_idTousers                        ratings[]               @relation("ratings_reviewed_user_idTousers")
-  ratings_ratings_reviewer_idTousers                             ratings[]               @relation("ratings_reviewer_idTousers")
+  ratings_ratings_reviewed_user_idTousers                        ratings[]                  @relation("ratings_reviewed_user_idTousers")
+  ratings_ratings_reviewer_idTousers                             ratings[]                  @relation("ratings_reviewer_idTousers")
   results                                                        results[]
   tutor_bookings                                                 tutor_bookings[]
   tutor_feedback                                                 tutor_feedback[]
   tutor_waitlist                                                 tutor_waitlist[]
   tutors                                                         tutors?
-  uniMartMessage_uniMartMessage_receiverIdTousers                uniMartMessage[]        @relation("uniMartMessage_receiverIdTousers")
-  uniMartMessage_uniMartMessage_senderIdTousers                  uniMartMessage[]        @relation("uniMartMessage_senderIdTousers")
+  uniMartMessage_uniMartMessage_receiverIdTousers                uniMartMessage[]           @relation("uniMartMessage_receiverIdTousers")
+  uniMartMessage_uniMartMessage_senderIdTousers                  uniMartMessage[]           @relation("uniMartMessage_senderIdTousers")
   uniMartOrder                                                   uniMartOrder[]
   uniMartProducts                                                uniMartProducts[]
   unimart_reviews                                                unimart_reviews[]
@@ -176,19 +179,20 @@ model app_notifications {
 }
 
 model companies {
-  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  owner_id             String                 @db.Uuid
-  name                 String                 @unique @db.VarChar(150)
-  industry             String                 @db.VarChar(120)
-  about                String
-  logo_url             String?
-  certificate_url      String?
-  location             String?                @default("Remote") @db.VarChar(150)
-  created_at           DateTime?              @default(now()) @db.Timestamptz(6)
-  users                users                  @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_companies_owner")
-  company_recent_works company_recent_works[]
-  company_reviews      company_reviews[]
-  gigs                 gigs[]
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  owner_id                 String                     @db.Uuid
+  name                     String                     @unique @db.VarChar(150)
+  industry                 String                     @db.VarChar(120)
+  about                    String
+  logo_url                 String?
+  certificate_url          String?
+  location                 String?                    @default("Remote") @db.VarChar(150)
+  created_at               DateTime?                  @default(now()) @db.Timestamptz(6)
+  users                    users                      @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_companies_owner")
+  company_recent_works     company_recent_works[]
+  company_reviews          company_reviews[]
+  gig_completion_approvals gig_completion_approvals[]
+  gigs                     gigs[]
 
   @@index([owner_id], map: "idx_companies_owner_id")
 }
@@ -223,15 +227,16 @@ model company_reviews {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model gig_applications {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  gig_id     String    @db.Uuid
-  user_id    String    @db.Uuid
-  motivation String
-  resume_url String
-  status     String    @default("PENDING") @db.VarChar(20)
-  created_at DateTime? @default(now()) @db.Timestamptz(6)
-  gigs       gigs      @relation(fields: [gig_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_gig_applications_gig")
-  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_gig_applications_user")
+  id                       String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gig_id                   String                    @db.Uuid
+  user_id                  String                    @db.Uuid
+  motivation               String
+  resume_url               String
+  status                   String                    @default("PENDING") @db.VarChar(20)
+  created_at               DateTime?                 @default(now()) @db.Timestamptz(6)
+  gigs                     gigs                      @relation(fields: [gig_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_gig_applications_gig")
+  users                    users                     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_gig_applications_user")
+  gig_completion_approvals gig_completion_approvals?
 
   @@unique([gig_id, user_id], map: "uq_gig_applications_user_gig")
   @@index([gig_id], map: "idx_gig_applications_gig_id")
@@ -240,16 +245,18 @@ model gig_applications {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model gigs {
-  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  company_id       String             @db.Uuid
-  title            String             @db.VarChar(150)
-  description      String
-  requirements     String[]           @default([])
-  budget           Decimal?           @db.Decimal(10, 2)
-  status           String             @default("OPEN") @db.VarChar(20)
-  created_at       DateTime?          @default(now()) @db.Timestamptz(6)
-  gig_applications gig_applications[]
-  companies        companies          @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_gigs_company")
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  company_id               String                     @db.Uuid
+  title                    String                     @db.VarChar(150)
+  description              String
+  requirements             String[]                   @default([])
+  budget                   Decimal?                   @db.Decimal(10, 2)
+  status                   String                     @default("OPEN") @db.VarChar(20)
+  created_at               DateTime?                  @default(now()) @db.Timestamptz(6)
+  gig_applications         gig_applications[]
+  gig_bookmarks            gig_bookmarks[]
+  gig_completion_approvals gig_completion_approvals[]
+  companies                companies                  @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_gigs_company")
 
   @@index([company_id], map: "idx_gigs_company_id")
 }
@@ -491,4 +498,47 @@ model user_skills {
 
   @@id([user_id, skill_id])
   @@index([skill_id], map: "idx_user_skills_skill_id")
+}
+
+model bank_details {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id             String    @unique @db.Uuid
+  bank_name           String    @db.VarChar(100)
+  account_holder_name String    @db.VarChar(150)
+  account_number      String    @db.VarChar(50)
+  branch              String    @db.VarChar(100)
+  created_at          DateTime? @default(now()) @db.Timestamp(6)
+  updated_at          DateTime? @default(now()) @db.Timestamp(6)
+  users               users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_bank_details_user_id")
+}
+
+model gig_bookmarks {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
+  gig_id     String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  gigs       gigs     @relation(fields: [gig_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_gig_bookmarks_gig")
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_gig_bookmarks_user")
+
+  @@unique([user_id, gig_id], map: "uq_gig_bookmarks_user_gig")
+  @@index([gig_id], map: "idx_gig_bookmarks_gig")
+  @@index([user_id, created_at(sort: Desc)], map: "idx_gig_bookmarks_user_created")
+}
+
+model gig_completion_approvals {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  application_id   String           @unique @db.Uuid
+  user_id          String           @db.Uuid
+  company_id       String           @db.Uuid
+  gig_id           String           @db.Uuid
+  created_at       DateTime         @default(now()) @db.Timestamptz(6)
+  gig_applications gig_applications @relation(fields: [application_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_gig_completion_approvals_application")
+  companies        companies        @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_gig_completion_approvals_company")
+  gigs             gigs             @relation(fields: [gig_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_gig_completion_approvals_gig")
+  users            users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_gig_completion_approvals_user")
+
+  @@index([gig_id], map: "idx_gig_completion_approvals_gig_id")
+  @@index([user_id, company_id], map: "idx_gig_completion_approvals_user_company")
 }
