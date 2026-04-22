@@ -15,6 +15,16 @@ async function assignFirstWaitlistedStudent(slotId: string) {
     orderBy: {
       created_at: "asc",
     },
+    select: {
+      id: true,
+      student_id: true,
+      slot_id: true,
+      tutor_slots: {
+        select: {
+          subject: true,
+        },
+      },
+    },
   });
 
   if (!firstWaitlisted) {
@@ -44,6 +54,15 @@ async function assignFirstWaitlistedStudent(slotId: string) {
     },
     data: {
       is_booked: true,
+    },
+  });
+
+  await prisma.tutor_notifications.create({
+    data: {
+      id: crypto.randomUUID(),
+      student_id: firstWaitlisted.student_id,
+      title: "Waitlist Approved",
+      message: `A slot is now available and your waitlist request for ${firstWaitlisted.tutor_slots.subject} has been approved.`,
     },
   });
 
