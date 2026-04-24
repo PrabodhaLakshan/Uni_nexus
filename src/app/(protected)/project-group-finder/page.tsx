@@ -23,7 +23,7 @@ export default function ProjectGroupFinderPage() {
     <div className="min-h-screen bg-slate-50">
       <Navbar />
       <GroupFinderUI user={user} />
-     
+
     </div>
   );
 }

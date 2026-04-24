@@ -110,70 +110,70 @@ function SidebarContent({
         </div>
 
         <div className="rounded-2xl border border-white/75 bg-white/45 p-2 shadow-[0_12px_28px_rgba(30,41,59,0.08)]">
-        <div className="space-y-1.5">
-          <NavItem
-            active={active === "dashboard"}
-            icon="D"
-            title="Dashboard"
-            desc="Find and match students"
-            onClick={() => {
-              onChange("dashboard");
-              onClose();
-              if (window.location.pathname !== "/project-group-finder") {
-                router.push("/project-group-finder?tab=dashboard");
-              }
-            }}
-          />
+          <div className="space-y-1.5">
+            <NavItem
+              active={active === "dashboard"}
+              icon="D"
+              title="Dashboard"
+              desc="Find and match students"
+              onClick={() => {
+                onChange("dashboard");
+                onClose();
+                if (window.location.pathname !== "/project-group-finder") {
+                  router.push("/project-group-finder?tab=dashboard");
+                }
+              }}
+            />
 
-          <div className="my-2 border-t border-white/60" />
+            <div className="my-2 border-t border-white/60" />
 
-          <NavItem
-            active={active === "project-group"}
-            icon="G"
-            title="Project Group"
-            desc="View members and roles"
-            badge="4"
-            badgeColor="green"
-            onClick={() => {
-              onChange("project-group");
-              onClose();
-              if (window.location.pathname !== "/project-group-finder") {
-                router.push("/project-group-finder?tab=project-group");
-              }
-            }}
-          />
+            <NavItem
+              active={active === "project-group"}
+              icon="G"
+              title="Project Group"
+              desc="View members and roles"
+              badge="4"
+              badgeColor="green"
+              onClick={() => {
+                onChange("project-group");
+                onClose();
+                if (window.location.pathname !== "/project-group-finder") {
+                  router.push("/project-group-finder?tab=project-group");
+                }
+              }}
+            />
 
-          <NavItem
-            active={active === "invites"}
-            icon="I"
-            title="Invites"
-            desc="Sent and received"
-            badge="3"
-            badgeColor="orange"
-            onClick={() => {
-              onChange("invites");
-              onClose();
-              if (window.location.pathname !== "/project-group-finder") {
-                router.push("/project-group-finder?tab=invites");
-              }
-            }}
-          />
+            <NavItem
+              active={active === "invites"}
+              icon="I"
+              title="Invites"
+              desc="Sent and received"
+              badge="3"
+              badgeColor="orange"
+              onClick={() => {
+                onChange("invites");
+                onClose();
+                if (window.location.pathname !== "/project-group-finder") {
+                  router.push("/project-group-finder?tab=invites");
+                }
+              }}
+            />
 
-          <NavItem
-            active={active === "chat"}
-            icon="C"
-            title="Chat"
-            desc="Real-time group chat"
-            badge="Live"
-            onClick={() => {
-              onChange("chat");
-              onClose();
-              if (window.location.pathname !== "/project-group-finder") {
-                router.push("/project-group-finder?tab=chat");
-              }
-            }}
-          />
-        </div>
+            <NavItem
+              active={active === "chat"}
+              icon="C"
+              title="Chat"
+              desc="Real-time group chat"
+              badge="Live"
+              onClick={() => {
+                onChange("chat");
+                onClose();
+                if (window.location.pathname !== "/project-group-finder") {
+                  router.push("/project-group-finder?tab=chat");
+                }
+              }}
+            />
+          </div>
         </div>
 
         <div className="mt-auto pt-6">
@@ -206,7 +206,7 @@ export default function LeftSidebar({
     <>
       <aside className="fixed left-0 top-16 z-30 hidden h-[calc(100vh-64px)] w-[260px] border-r border-blue-200/80 bg-white/75 backdrop-blur-xl shadow-[12px_0_34px_rgba(15,23,42,0.12)] lg:block">
         <div className="pointer-events-none absolute inset-y-0 right-0 w-[3px] bg-gradient-to-b from-blue-400/40 via-indigo-300/45 to-sky-300/35" />
-        <SidebarContent active={active} onChange={onChange} onClose={() => {}} groupId={groupId} />
+        <SidebarContent active={active} onChange={onChange} onClose={() => { }} groupId={groupId} />
       </aside>
 
       <AnimatePresence>
